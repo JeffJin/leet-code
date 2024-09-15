@@ -67,10 +67,68 @@ export class LeetCodeComponent implements OnInit {
     // console.log('longestSubarray',  this.longestSubarray([10,1,2,4,7,2], 5));
     // console.log('robotWithString',  this.robotWithString('zza'));
     // console.log('finalPrices',  this.finalPrices([8,4,6,2,3]));
-    console.log('finalPrices',  this.finalPrices([8,7,4,2,8,1,7,7,10,1]));
-    // console.log('finalPrices',  this.finalPrices([10,1,1,6]));
+    // console.log('finalPrices',  this.finalPrices([8,7,4,2,8,1,7,7,10,1]));
+    console.log('mostCompetitive',  this.mostCompetitive([71,18,52,29,55,73,24,42,66,8,80,2], 3));
+    // console.log('mostCompetitive',  this.mostCompetitive([4,5,3,6,2,1], 3));
+    // console.log('mostCompetitive',  this.mostCompetitive([3,5,2,6], 2));
+    // console.log('mostCompetitive',  this.mostCompetitive([2,4,3,3,5,4,9,6], 4));
 
   }
+
+  mostCompetitive(nums: number[], k: number): number[] {
+    const stack: number[] = [];
+    const n = nums.length;
+    for(let i = 0; i < n; i++) {
+      while (stack.length > 0 && nums[i] < stack[stack.length - 1] && (n - i + stack.length) > k) {
+        stack.pop();
+      }
+      stack.push(nums[i]);
+    }
+
+    while(stack.length > k) {
+      stack.pop();
+    }
+    return stack;
+  };
+
+  validSubarrays(nums: number[]): number {
+    let count = 0;
+    const stack: number[] = [];
+    const n = nums.length;
+    for(let i = 0; i < n; i++) {
+      while (stack.length > 0 && nums[i] < nums[stack[stack.length - 1]]) {
+        let p = stack.pop()!;
+        count += i - p;
+      }
+      stack.push(i);
+    }
+
+    while (stack.length > 0) {
+      count += nums.length - stack.pop()!;
+    }
+
+    return count;
+  };
+
+  validSubarrays1(nums: number[]): number {
+    let count = 0;
+    let right = 0;
+    const n = nums.length;
+    for(let left = 0; left < n; left++) {
+      //reset right
+      right = left;
+      while (right < n) {
+        if(nums[right] >= nums[left]) {
+          right++
+        } else {
+          break;
+        }
+      }
+      count += right - left;
+    }
+
+    return count;
+  };
 
   finalPrices(prices: number[]): number[] {
     const stack: number[] = [];
