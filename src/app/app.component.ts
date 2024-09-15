@@ -1,4 +1,10 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {Data} from "./data";
+import {min} from "rxjs";
+import {MinHeap} from "./min-heap";
+import {MaxHeap} from "./max-heap";
+import {Heap} from "./heap";
+import {KthLargest} from "./kthLargest";
 
 @Component({
   selector: 'app-root',
@@ -6,5 +12,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'angular15App';
+
 }
