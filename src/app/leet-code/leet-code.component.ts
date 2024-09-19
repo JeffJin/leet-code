@@ -1,6 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {data1, data2} from "../data";
 import {buildLinkedList, ListNode} from "../linked-list";
+import {convertTree, TreeNode} from "../tree-node";
+import {findUp} from "@angular/cli/src/utilities/find-up";
 
 @Component({
   selector: 'app-leet-code',
@@ -67,10 +69,248 @@ export class LeetCodeComponent implements OnInit {
     // console.log('longestSubarray',  this.longestSubarray([10,1,2,4,7,2], 5));
     // console.log('robotWithString',  this.robotWithString('zza'));
     // console.log('finalPrices',  this.finalPrices([8,4,6,2,3]));
-    console.log('finalPrices',  this.finalPrices([8,7,4,2,8,1,7,7,10,1]));
-    // console.log('finalPrices',  this.finalPrices([10,1,1,6]));
+
+    const node = convertTree([8,3,10,1,6,null,14,null,null,4,7,13]);
+    const node1 = convertTree([1,null,2,null,0,3]);
+    const node2 = convertTree([3,9,20,null,null,15,7]);
+    console.log('maxAncestorDiff',  this.maxAncestorDiff(node));
+    console.log('maxAncestorDiff',  this.maxAncestorDiff(node1));
+    console.log('maxAncestorDiff',  this.maxAncestorDiff(node2));
+  }
+
+  maxAncestorDiff(root: TreeNode | null): number {
+    if(!root) {
+      return 0;
+    }
+    const cache = new Map();
+    const dfs = (node: TreeNode | null): number[] => {
+      if(!node) {
+        return [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+      }
+      if(cache.has(node)) {
+        return cache.get(node);
+      }
+      let [lMin, lMax] = dfs(node.left);
+      let [rMin, rMax] = dfs(node.right);
+      let val = [Math.min(lMin, rMin, node.val), Math.max(lMax, rMax, node.val)];
+      cache.set(node, val);
+      return val;
+    }
+
+    let queue = [root];
+    let maxDiff = 0;
+    while(queue.length) {
+      let nextQueue: TreeNode[] = [];
+      while(queue.length > 0) {
+        let node = queue.shift()!;
+        let [min, max] = dfs(node);
+        maxDiff = Math.max(maxDiff, Math.abs(min - node.val), Math.abs(max - node.val));
+        if(node.left) {
+          nextQueue.push(node.left);
+        }
+        if(node.right) {
+          nextQueue.push(node.right);
+        }
+      }
+
+      queue = nextQueue;
+    }
+
+    return maxDiff;
+  };
+
+  minDepth(root: TreeNode | null): number {
+    if(!root) {
+      return 0;
+    }
+    let queue = [root];
+    let count = 1;
+
+    while(queue.length) {
+      let nextQueue: TreeNode[] = [];
+      while(queue.length > 0) {
+        let node = queue.shift()!;
+        if(!node.left && !node.right) {
+          return count;
+        }
+        if(node.left) {
+          nextQueue.push(node.left);
+        }
+        if(node.right) {
+          nextQueue.push(node.right);
+        }
+      }
+      count++;
+      queue = nextQueue;
+    }
+    return -1;
+  };
+
+  lowestCommonAncestor(root: TreeNode | null, p: TreeNode | null, q: TreeNode | null): TreeNode | null {
+    if(!root) {
+      return null;
+    }
+
+    const findNode = (node: TreeNode | null, t: TreeNode | null): boolean => {
+      if(!node && !t) {
+        return true;
+      }
+      if((!node && t) || (node && !t)) {
+        return false;
+      }
+      if(node && t && node.val == t.val) {
+        return true;
+      }
+      return findNode(node!.left, t) || findNode(node!.right, t);
+    }
+
+    let stack = [root];
+    let curr: TreeNode | null = null;
+    while (stack.length) {
+      let node = stack.pop()!;
+      let isValid = findNode(node, p) && findNode(node, q);
+      if(isValid) {
+        curr = node;
+      }
+      if(node?.left) {
+        stack.push(node.left)
+      }
+      if(node?.right) {
+        stack.push(node.right)
+      }
+    }
+
+    return curr;
 
   }
+
+  goodNodes(root: TreeNode | null): number {
+    if(!root) {
+      return 0;
+    }
+    const traverse = (node: TreeNode | null, max: number): number => {
+      if(!node) {
+        return 0;
+      }
+      let count = 0
+      if (node.val >= max) {
+        count = 1;
+      }
+      max = Math.max(max, node.val);
+      return traverse(node.left, max) + traverse(node.right, max) + count;
+    };
+    return traverse(root, root.val);
+  };
+
+  hasPathSum(root: TreeNode | null, targetSum: number): boolean {
+    if (root == null) {
+      return false;
+    }
+
+    const validate = (node: TreeNode | null, remaining: number): boolean => {
+      if(node == null) {
+        return false;
+      }
+      if(!node.left && !node.right && remaining == node.val) {
+        return true;
+      }
+      remaining -= node.val;
+      let left = validate(node.left, remaining);
+      let right = validate(node.right, remaining);
+      return left || right;
+    };
+
+    return validate(root, targetSum);
+  };
+
+  sumSubarrayMins(arr: number[]): number {
+    const MOD = 1000000007;
+
+    let stack = [];
+    let sumOfMinimums = 0;
+
+    for (let i = 0; i <= arr.length; i++) {
+
+      // when i reaches the array length, it is an indication that
+      // all the elements have been processed, and the remaining
+      // elements in the stack should now be popped out.
+
+      while (stack.length && (i == arr.length || arr[stack[stack.length - 1]] >= arr[i])) {
+
+        // Notice the sign ">=", This ensures that no contribution
+        // is counted twice. rightBoundary takes equal or smaller
+        // elements into account while leftBoundary takes only the
+        // strictly smaller elements into account
+
+        const mid: number = stack.pop()!;
+        const leftBoundary: number = stack[stack.length - 1] === undefined ? -1 : stack[stack.length - 1];
+        const rightBoundary = i;
+
+        // count of subarrays where mid is the minimum element
+        const count = ((mid - leftBoundary) * (rightBoundary - mid)) % MOD;
+        sumOfMinimums += (count * arr[mid]) % MOD;
+        sumOfMinimums %= MOD;
+      }
+      stack.push(i);
+    }
+
+    return sumOfMinimums;
+  }
+
+  sumSubarrayMins1(arr: number[]): number {
+    const MOD = 1000000007;
+    let n = arr.length;
+    let sum = 0;
+    for(let i = 0; i < arr.length; i++) {
+      let r = i, l = i;
+
+      //move right
+      for (r = i + 1; r < arr.length; r++) {
+        if(arr[r] < arr[i]) {
+          break;
+        }
+        let stack: number[] = [arr[i]];
+        while (r < n && arr[r] <= stack[stack.length - 1]) {
+          stack.pop();
+        }
+        stack.push(arr[r]);
+      }
+
+      //move left
+      for (l = i - 1; l >= 0; l--) {
+        if(arr[l] <= arr[i]) {
+          break;
+        }
+        let stack: number[] = [arr[i]];
+        while (l >= 0 && arr[l] < stack[stack.length - 1]) {
+          stack.pop();
+        }
+        stack.push(arr[l]);
+      }
+
+      sum += (i - l) * (r - i) * arr[i];
+    }
+
+    return sum % MOD;
+  };
+
+  canSeePersonsCount(heights: number[]): number[] {
+    let n = heights.length;
+    const result = new Array<number>(n).fill(0);
+    let stack: number[] = [];
+    for(let i = n - 1; i >= 0; i--){
+      while(stack.length > 0 && heights[i] > heights[stack[stack.length - 1]]) {
+        stack.pop();
+        result[i]++;
+      }
+      if (stack.length > 0) {
+        result[i]++;
+      }
+      stack.push(i);
+    }
+    result[result.length - 1] = 0;
+    return result;
+  };
 
   finalPrices(prices: number[]): number[] {
     const stack: number[] = [];
