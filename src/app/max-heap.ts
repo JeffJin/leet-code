@@ -2,7 +2,7 @@ export class MaxHeap {
   private readonly heap: number[];
   private comparer: (a: number, b: number) => boolean;
 
-  constructor(comparer: (a: number, b: number) => boolean = (a: number, b: number) => b > a) {
+  constructor(comparer: (a: number, b: number) => boolean = (a: number, b: number) => a > b) {
     this.heap = [];
     this.comparer = comparer;
   }

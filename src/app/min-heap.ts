@@ -1,7 +1,7 @@
 export class MinHeap {
   private readonly heap: number[];
   private comparer: (a: number, b: number) => boolean;
-  constructor(comparer: (a: number, b: number) => boolean = (a: number, b: number) => a > b) {
+  constructor(comparer: (a: number, b: number) => boolean = (a: number, b: number) => a < b) {
     this.heap = [];
     this.comparer = comparer;
   }
@@ -56,7 +56,7 @@ export class MinHeap {
   // Removing an element will remove the
   // top element with highest priority then
   // heapifyDown will be called
-  remove() {
+  remove(): any {
     if (this.heap.length === 0) {
       return null;
     }
@@ -67,7 +67,7 @@ export class MinHeap {
     return item;
   }
 
-  add(item: number) {
+  add(item: any) {
     this.heap.push(item);
     this.heapifyUp();
   }

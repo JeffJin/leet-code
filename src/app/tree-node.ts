@@ -1,14 +1,17 @@
 export class TreeNode {
   val: number
-  left: TreeNode | null
-  right: TreeNode | null
+  left: TreeNode | null;
+  right: TreeNode | null;
+  parent: TreeNode | null;
 
-  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
+  constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null, parent?: TreeNode | null) {
     this.val = (val === undefined ? 0 : val)
     this.left = (left === undefined ? null : left)
     this.right = (right === undefined ? null : right)
+    this.parent = (parent === undefined ? null : parent)
   }
 }
+
 
 //[5,4,8,11,null,13,4,7,2,null,null,null,1]
 export const convertTree = (items: any[]): TreeNode | null => {
