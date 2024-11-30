@@ -7,8 +7,10 @@ import {
 } from '@datastructures-js/priority-queue';
 import {MaxHeap} from "../max-heap";
 import {convertTree, TreeNode} from "../tree-node";
-import {ListNode} from "../linked-list";
+import {buildLinkedList, ListNode} from "../linked-list";
 import {ArrayReader} from "../array-reader";
+import {data3, data5} from "../data";
+import {MinHeap} from "../min-heap";
 
 @Component({
   selector: 'app-leet-code',
@@ -22,15 +24,2886 @@ export class LeetCodeComponent implements OnInit {
     // console.log('videoStitching',  this.videoStitching(
     //   [[0,1],[6,8],[0,2],[5,6],[0,4],[0,3],[6,7],[1,3],[4,7],[1,4],[2,5],[2,6],[3,4],[4,5],[5,7],[6,9]], 9));
 
-    // let node1 = convertTree([6, 3, 13, 2, 4, 9, 15, null, null, null, null, null, null, 14]);
-    // let node2 = convertTree([9, 6, 14, null, null, 13, 20, 12]);
+    // let node1 = convertTree([3, 2, 3, null, 3, null, 1]);
+    // let node2 = convertTree([3,4,5,1,3,null,1]);
     // let reader1 = new ArrayReader([7, 7, 7, 7, 10, 7, 7, 7]);
     // let reader2 = new ArrayReader([6, 6, 12]);
 
-    console.log('combinationSum2', this.combinationSum2([10, 1, 2, 7, 6, 1, 5], 8));//1,1,2,5,6,7,10
-    console.log('combinationSum2', this.combinationSum2([2, 5, 2, 1, 2], 5));
-
+    // console.log('thirdMax', this.thirdMax([1,1,4,2,1,3]));
+    // console.log('thirdMax', this.thirdMax([5,1,2,3,4]));
+    // console.log('findDisappearedNumbers', this.findDisappearedNumbers([2,2,3,1]));
+    // let head1 = buildLinkedList([1,2,4]);
+    // let head2 = buildLinkedList([5]);
+    console.log('furthestBuilding', this.furthestBuilding([4,12,2,7,3,18,20,3,19], 10, 2));
+    console.log('furthestBuilding', this.furthestBuilding([14,3,19,3], 17, 0));
   }
+
+  furthestBuilding(heights: number[], bricks: number, ladders: number): number {
+
+  };
+
+  kClosest(points: number[][], k: number): number[][] {
+    const calc = (a: number, b: number) => a * a + b * b;
+    let max = 0, min = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < points.length; i++) {
+      let curr = points[i];
+      let val = calc(curr[0], curr[1]);
+      curr.push(val);
+      if(val > max) {
+        max = val;
+      }
+      if(val < min) {
+        min = val;
+      }
+    }
+
+    const count = (distance: number): any[] => {
+      let val = 0;
+      let temp: any[] = [];
+      for(let i = 0; i < points.length; i++) {
+        if(points[i][2] <= distance) {
+          val++;
+          temp.push({val, point: points[i]});
+        }
+      }
+      return temp;
+    }
+
+    let left = min, right = max;
+    while(left <= right) {
+      let mid = (left + right) / 2;
+      let t = count(mid);
+      if (t.length == k) {
+        return t.map((item => item.point.slice(0, 2)));
+      }
+      if (t.length > k) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    }
+    return [];
+  };
+
+  minMeetingRooms(intervals: number[][]): number {
+    intervals.sort((a, b) => {
+      if(a[0] == b[0]) {
+        return b[0] - a[0];
+      }
+      return a[0] - b[0];
+    });
+    const heap: number[] = [];
+    heap.push(intervals[0][1]);
+    for(let i = 1; i < intervals.length; i++) {
+      let [start, end] = intervals[i];
+      if(start < heap[heap.length - 1]) {
+        heap.push(end);
+        heap.sort((a, b) => b - a);
+      } else {
+        heap.pop();
+        heap.push(end);
+        heap.sort((a, b) => b - a);
+      }
+    }
+
+    return heap.length;
+  };
+
+  kthSmallest(matrix: number[][], k: number): number {
+    let n = matrix.length;
+    const countRange = (mid: number, pairs: number[]): number => {
+      let count = 0, row = n - 1, col = 0;
+      while (row >= 0 && col < n) {
+        if(matrix[row][col] > mid) {
+          pairs[1] = Math.min(pairs[1], matrix[row][col]);
+          row--;
+        } else {
+          pairs[0] = Math.max(pairs[0], matrix[row][col]);
+          count += row + 1;
+          col++;
+        }
+      }
+      return count;
+    };
+
+    let start = matrix[0][0], end = matrix[n-1][n-1];
+    while(start < end) {
+      let mid = Math.floor((end + start) / 2);
+      let pair = [matrix[0][0], matrix[n-1][n-1]];
+      let count = countRange(mid, pair);
+      if(count == k) {
+        return pair[0]; //updated within countRange function
+      }
+      if(count < k) {
+        start = pair[1];
+      } else {
+        end = pair[0];
+      }
+    }
+    return start;
+  };
+
+  kWeakestRows(mat: number[][], k: number): number[] {
+    const countOnes = (nums: number[]): number => {
+
+      let left = 0;
+      let right = nums.length;
+      while(left < right) {
+        let mid = Math.ceil((left + right) / 2);
+        if(nums[mid] == 1) {
+          left = mid;
+        } else {
+          right = mid - 1;
+        }
+      }
+      if(nums[left] == 1) {
+        return left + 1;
+      } else {
+        return 0;
+      }
+    };
+
+    let result: number[][] = [];
+    let m = mat.length;
+    for (let i = 0; i < m; i++) {
+      let row = mat[i];
+      let ones = countOnes(row);
+      result.push([ones, i]);
+    }
+    result.sort((a, b) => {
+      if(a[0] == b[0]) {
+        return a[1] - b[1];
+      }
+      return a[0] - b[0];
+    });
+    let answer: number[] = [];
+    for(let i = 0; i < k; i++) {
+      answer.push(result[i][1]);
+    }
+    return answer;
+  };
+
+  testHeap(nums: number[]): number[] {
+    let heap = new MaxHeap(nums);
+    heap.print();
+    // console.log(heap.peek());
+    // console.log(heap.remove());
+    heap.add(6)
+    console.log('after adding 6', nums);
+    heap.add(2)
+    console.log('after adding 2', nums);
+    heap.add(7)
+    console.log('after adding 7', nums);
+
+    heap.remove()
+    console.log('remove top', nums);
+    heap.remove()
+    console.log('remove top', nums);
+    heap.remove()
+    console.log('remove top', nums);
+    return nums;
+  }
+
+  generateTrees(n: number): Array<TreeNode | null> {
+    let memo = new Map();
+    const dp = (start: number, end: number): Array<TreeNode | null>  => {
+      let results: Array<TreeNode | null> = [];
+      if(start > end) {
+        results.push(null);
+        return results;
+      }
+
+      if(memo.has(`${start}_${end}`)){
+        return memo.get(`${start}_${end}`);
+      }
+
+      for(let i = start; i <= end; i++) { //i is the root value
+        const leftNodes = dp(start, i - 1);//left is smaller than i
+        const rightNodes = dp(i + 1, end); //right is greater than i
+        //each possible combinations of the left and right pairs
+        for (let j = 0; j < leftNodes.length; j++) {
+          for (let k = 0; k < rightNodes.length; k++) {
+            let root = new TreeNode(i, leftNodes[j], rightNodes[k]);
+            results.push(root);
+          }
+        }
+      }
+      memo.set(`${start}_${end}`, results);
+      return results;
+    };
+
+    return dp(1, n);
+  };
+
+  kthGrammar(n: number, k: number): number {
+    const search = (nodeVal: number, kth: number, row: number): number => {
+      if (row == 1) {
+        return nodeVal;
+      }
+
+      let nodesAtRow = Math.pow(2, row - 1);
+      if (kth > nodesAtRow / 2) { //at right side of the half
+        nodeVal = nodeVal == 0 ? 1 : 0;
+        return search(nodeVal, kth - nodesAtRow / 2, row - 1);
+      } else {//at left side of the half
+        nodeVal = nodeVal == 0 ? 0 : 1;
+        return search(nodeVal, kth, row - 1);
+      }
+    }
+    return search(0, k, n);
+  };
+
+  mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
+    const merge = (node1: ListNode | null, node2: ListNode | null): ListNode | null => {
+      if(node1 == null) {
+        return node2;
+      } else if(node2 == null) {
+        return node1;
+      } else {
+        if(node1.val >= node2.val) {
+          node2.next = merge(node1, node2.next);
+          return node2; //return smaller one to be the head for the next comparison
+        } else {
+          node1.next = merge(node1.next, node2);
+          return node1;
+        }
+      }
+    };
+
+    return merge(list1, list2);
+  };
+
+  myPow(x: number, n: number): number {
+    if(n < 0) {
+      return 1 / this.myPow(x, n * (-1));
+    }
+    if(n == 0) {
+      return 1;
+    }
+    if(n == 1) {
+      return x;
+    }
+    if (n % 2 == 1) {
+      return x * this.myPow(x * x, (n - 1) / 2);
+    }
+    else {
+      return this.myPow(x * x, n / 2);
+    }
+  };
+
+  fib(n: number): number {
+    const map = new Map();
+    const fibRecur = (num: number): number => {
+      if(num < 2) {
+        return num;
+      }
+      if(map.has(num)) {
+        return map.get(num);
+      }
+
+      let result = fibRecur(num - 1) + fibRecur(num - 2);
+      map.set(num, result);
+      return result;
+    }
+
+    return fibRecur(n);
+  };
+
+  getRow(rowIndex: number): number[] {
+    if(rowIndex == 0){
+      return [1];
+    }
+    if(rowIndex == 1){
+      return [1, 1];
+    }
+    let prevRow = this.getRow(rowIndex - 1);
+    let result = new Array(rowIndex + 1).fill(0);
+    result[0] = 1;
+    result[result.length - 1] = 1;
+    for(let i = 1; i < result.length - 1 ; i++){
+      result[i] = prevRow[i - 1] + prevRow[i];
+    }
+
+    return result;
+  };
+
+  reverseList1(head: ListNode | null): ListNode | null {
+    if (!head || !head.next) {
+      return head;
+    }
+    let prev = null;
+    let curr: ListNode | null = head;
+    while(curr != null) {
+      let temp: ListNode | null = curr.next;
+      curr.next = prev;
+      prev = curr;
+      curr = temp;
+    }
+
+    return prev;
+  };
+
+  swapPairs(head: ListNode | null): ListNode | null {
+    if(head == null || head.next == null) {
+      return head;
+    }
+    let firstNode = head;
+    let secondNode = head.next;
+    firstNode.next = this.swapPairs(secondNode.next);
+    secondNode.next = firstNode;
+    return secondNode;
+  };
+  swapPairsWhile(head: ListNode | null): ListNode | null {
+    if(head == null) {
+      return null;
+    }
+    const dummy = new ListNode();
+    dummy.next = head.next;
+    let prevNode = dummy;
+    while (head && head.next) {
+      const firstNode: ListNode = head;
+      const secondNode: ListNode | null = head.next;
+      //this will update dummy next node only once
+      prevNode.next = secondNode;
+      firstNode.next = secondNode.next;
+      secondNode.next = firstNode;
+      //reference to dummy node next is broken after this line
+      head = firstNode.next;
+      prevNode = firstNode;
+    }
+    return dummy.next;
+  };
+
+  radixSort(nums: number[]): number[] {
+    const countingSort = (arr: number[], placeVal: number) => {
+      let counts = new Array(10).fill(0);
+      for(let num of arr) {
+        let curr = Math.floor(num / placeVal);
+        counts[curr % 10] += 1;
+      }
+      let startingIndex = 0;
+      for(let i = 0; i < counts.length; i++) {
+        let count = counts[i];
+        counts[i] = startingIndex;
+        startingIndex += count;
+      }
+      let results = new Array(arr.length);
+      for(const num of arr) {
+        let curr = Math.floor((num) / placeVal);
+        results[counts[curr % 10]] = num;
+        counts[curr % 10]++;
+      }
+      for(let i = 0; i < results.length; i++) {
+        arr[i] = results[i];
+      }
+    };
+    let max = Math.max(...nums);
+    let placeVal = 1;
+    while(Math.floor(max / placeVal) > 0) {
+      countingSort(nums, placeVal);
+      placeVal *= 10;
+    }
+    return nums;
+  }
+
+  minimumAbsDifference(arr: number[]): number[][] {
+    const max = Math.max(...arr);
+    const shift = Math.min(...arr);
+    const counts = new Array<number>(max - shift + 1).fill(0);
+    for (let i = 0; i < arr.length; i++) {
+      counts[arr[i] - shift] = counts[arr[i] - shift] + 1;
+    }
+    let startingIndex = 0;
+    for (let i = 0; i < counts.length; i++) {
+      let count = counts[i];
+      counts[i] = startingIndex;
+      startingIndex += count;
+    }
+
+    let temp: number[] = new Array(arr.length);
+    for (const num of arr) {
+      temp[counts[num - shift]] = num;
+      counts[num - shift] = counts[num - shift] + 1;
+    }
+
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = temp[i];
+    }
+
+    let results: number[][] = [];
+    let minDiff = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < arr.length - 1; i++) {
+      let currDiff = arr[i + 1] - arr[i];
+      if (currDiff < minDiff) {
+        minDiff = currDiff;
+        results = [];
+        results.push([arr[i], arr[i+1]]);
+      } else if(currDiff == minDiff){
+        results.push([arr[i], arr[i+1]]);
+      }
+    }
+
+    return results;
+  };
+
+  countingSort(nums: number[]): number[] {
+    const max = Math.max(...nums);
+    const shift = Math.min(...nums);
+    const counts = new Array(max - shift + 1).fill(0);
+
+    for (let i = 0; i < counts.length; i++) {
+      counts[nums[i] - shift] = counts[nums[i] - shift] + 1;
+    }
+    let startingIndex = 0;
+    for (let i = 0; i < counts.length; i++) {
+      let count = counts[i];
+      counts[i] = startingIndex;
+      startingIndex += count;
+    }
+
+    let results: number[] = new Array(nums.length);
+    for (const num of nums) {
+      results[counts[num - shift]] = num;
+      counts[num - shift] = counts[num - shift] + 1;
+    }
+    return results;
+  }
+
+  findKthLargest(nums: number[], k: number): number {
+    const quickSelect = (arr: number[], kth: number): number => {
+      let n = arr.length;
+      let mid = Math.floor(n/2);
+      let midArr = [], leftArr = [], rightArr = [];
+      for(let i = 0; i < n; i++) {
+        if(arr[mid] == arr[i]) {
+          midArr.push(arr[i]);
+        } else if(arr[mid] < arr[i]){
+          rightArr.push(arr[i]);
+        } else {
+          leftArr.push(arr[i]);
+        }
+      }
+      if(rightArr.length >= kth){
+        return quickSelect(rightArr, kth);
+      } else if((rightArr.length + midArr.length) < kth){
+        return quickSelect(leftArr, kth - rightArr.length - midArr.length);
+      } else {
+        return midArr[0];
+      }
+    }
+
+    return quickSelect(nums, k);
+  };
+
+  heapSort(nums: number[]): number[] {
+    const heapify = (size: number, index: number) => {
+      let maxIndex = index;
+      let left = 2*index + 1;
+      let right = 2*index + 2;
+
+      if(left < size && nums[left] > nums[maxIndex]) {
+        maxIndex = left;
+      }
+      if(right < size && nums[right] > nums[maxIndex]) {
+        maxIndex = right;
+      }
+
+      if(maxIndex != index) {
+        [nums[maxIndex], nums[index]] = [nums[index], nums[maxIndex]];
+        heapify(size, maxIndex);
+      }
+    };
+
+    for(let i = Math.floor(nums.length / 2) - 1; i >= 0; i--) {
+      heapify(nums.length, i);
+    }
+
+    for(let i = nums.length - 1; i >= 0; i--) {
+      [nums[0], nums[i]] = [nums[i], nums[0]];
+      heapify(i, 0);
+    }
+
+    return nums;
+  }
+
+  insertionSortList(head: ListNode | null): ListNode | null {
+    if(!head) {
+      return head;
+    }
+    let dummy = new ListNode();
+    let curr: ListNode | null = head;
+    let prev: ListNode | null = null;
+    while(curr != null) {
+      prev = dummy;
+      //loop through new dummy headed list
+      while (prev.next != null && curr.val >= prev.next.val) {
+        prev = prev.next;
+      }
+      let temp = prev.next;
+      prev.next = curr;
+      let nextInput: ListNode | null = curr.next;
+      curr.next = temp;
+
+      curr = nextInput;
+    }
+
+    return dummy.next;
+  };
+
+  sortColors(nums: number[]): number[] {
+    let shift = Math.min(...nums);
+    let max = Math.max(...nums);
+
+    let counts = new Array(nums.length).fill(0);
+    for (let i = 0; i < nums.length; i++) {
+      counts[nums[i] - shift] = counts[nums[i] - shift] + 1;
+    }
+    let startingIndex = 0;
+    for(let i = 0; i < max + 1; i++){
+      let count = counts[i];
+      counts[i] = startingIndex;
+      startingIndex += count;
+    }
+    let results = new Array(nums.length);
+
+    for(let num of nums){
+      results[counts[num - shift]] = num;
+      counts[num - shift]++;
+    }
+
+    for(let i = 0; i < results.length; i++) {
+      nums[i] = results[i];
+    }
+    return results;
+  };
+
+  findDisappearedNumbers(nums: number[]): number[] {
+    let n = nums.length;
+    let result: number[] = [];
+    nums.sort((a, b) => a - b);
+    let curr = 1;
+    for(let i = 1; i < n; i++) {
+      if(nums[i - 1] != nums[i]){
+        nums[curr] = nums[i];
+        curr++;
+      }
+    }
+
+    while(nums.length > curr){
+      nums.pop();
+    }
+
+    for(let i = n - 1; i >= 0; i--) {
+      let val = nums[i];
+      nums[val - 1] = nums[i];
+    }
+
+    for(let i = 0; i < n; i++) {
+      if(nums[i] != i + 1){
+        result.push(i+1);
+      }
+    }
+
+    return result;
+  };
+
+  thirdMax(nums: number[]): number {
+    if(nums.length < 3) {
+      return Math.max(...nums);
+    }
+    let set = new Set();
+    let sorted: number[] = [];
+    nums.sort((a, b) => b - a);
+    for(let i = 0; i < nums.length; i++) {
+      let temp = nums[i];
+      if(!set.has(temp)) {
+        set.add(temp);
+        sorted.push(temp);
+        if(sorted.length == 3) {
+          break;
+        }
+      }
+    }
+    sorted.sort((a, b) => a - b);
+    return sorted.length == 3 ? sorted[0] : sorted[sorted.length-1];
+  };
+
+  heightChecker(heights: number[]): number {
+    let expected = [...heights];
+    this.mergeSort(expected);
+    let count = 0;
+    for(let i = 0; i < heights.length; i++) {
+      if(heights[i] != expected[i]) {
+        count++;
+      }
+    }
+
+    return count;
+  };
+
+  mergeSort(arr: number[]) {
+    const merge = (left: number, mid: number, right: number, tempArr: number[]) => {
+      let start1 = left;
+      let start2 = mid + 1;
+      let l1 = mid - left + 1;
+      let l2 = right - mid;
+
+      for(let i = 0; i < l1; i++) {
+        tempArr[start1 +i] = arr[start1 +i];
+      }
+      for(let i = 0; i < l2; i++) {
+        tempArr[start2 +i] = arr[start2 +i];
+      }
+      let i = 0, j = 0, k = left;
+      while (i < l1 && j < l2) {
+        if (tempArr[start1 + i] <= tempArr[start2 + j]) {
+          arr[k] = tempArr[start1 + i];
+          i += 1;
+        } else {
+          arr[k] = tempArr[start2 + j];
+          j += 1;
+        }
+        k += 1;
+      }
+
+      // Copy remaining elements
+      while (i < l1) {
+        arr[k] = tempArr[start1 + i];
+        i += 1;
+        k += 1;
+      }
+      while (j < l2) {
+        arr[k] = tempArr[start2 + j];
+        j += 1;
+        k += 1;
+      }
+    };
+
+    const sort = (left: number, right: number, tempArr: number[]) => {
+      if (left >= right) {
+        return;
+      }
+      let mid = (left + right) / 2;
+      // Sort first and second halves recursively.
+      sort(left, mid, tempArr);
+      sort(mid + 1, right, tempArr);
+      // Merge the sorted halves.
+      merge(left, mid, right, tempArr);
+    }
+
+    let tempArray = new Array<number>(arr.length);
+    sort(0, arr.length - 1, tempArray);
+  }
+
+  bubbleSort(arr: number[]): number[] {
+    for(let i = 0; i < arr.length; i++) {
+      for(let j = 0; j < arr.length - i - 1; j++) {
+        let temp = arr[j];
+        if(arr[j] > arr[j + 1]) {
+          arr[j] = arr[j+1];
+          arr[j+1] = temp;
+        }
+      }
+    }
+    return arr;
+  }
+
+  sortArrayByParity(nums: number[]): number[] {
+    let l = 0, r = nums.length - 1;
+    while(l < r) {
+      if(nums[l] % 2 == 0) {
+        l++;
+      }
+      if(nums[r] % 2 == 1) {
+        r--;
+      }
+      //swap
+      if(l < r && nums[l] % 2 == 1 && nums[r] % 2 == 0) {
+        let temp = nums[l];
+        nums[l] = nums[r];
+        nums[r] = temp;
+        l++;
+        r--;
+      }
+    }
+    return nums;
+  };
+
+  moveZeroes(nums: number[]): number[] {
+    let curr = 0;
+    for (let i = 0; i < nums.length; i++) {
+      if(nums[i] != 0){
+        nums[curr] = nums[i];
+        curr++;
+      }
+    }
+    for(let i = curr; i < nums.length; i++){
+      nums[i] = 0;
+    }
+    return nums;
+  }
+  replaceElements(arr: number[]): number[] {
+    let max = arr[arr.length-1];
+    for (let i = arr.length - 1; i > 0; i--) {
+      let temp =arr[i-1];
+      max = Math.max(max, arr[i]);
+      arr[i - 1] = max;
+      max = Math.max(max, temp);
+    }
+    arr[arr.length-1] = -1;
+    return arr;
+  };
+
+  validMountainArray(arr: number[]): boolean {
+    let n = arr.length;
+    if(n < 3) {
+      return false;
+    }
+
+    let increasing = 0;
+    let increasingStop = false;
+    let decreasing = 0;
+    for(let i=0; i < arr.length - 1; i++) {
+      if(arr[i] == arr[i + 1]) {
+        return false;
+      }
+      if(!increasingStop && arr[i] < arr[i + 1]) {
+        increasing++;
+      } else {
+        increasingStop = true;
+        decreasing++;
+      }
+    }
+    if(!increasingStop) {
+      return false;
+    }
+    return increasing + decreasing + 1 == n;
+  };
+
+  checkIfExist(arr: number[]): boolean {
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = 0; j < arr.length; j++) {
+        if(i !== j && (arr[i] == 2 * arr[j] || 2 * arr[i] == arr[j])){
+          return true;
+        }
+      }
+    }
+
+    return false;
+
+  };
+
+  removeDuplicates1(nums: number[]): number {
+    let currIdx = 1;
+    for(let i = 1; i < nums.length; i++) {
+      if(nums[i-1] != nums[i]){
+        nums[currIdx] = nums[i];
+        currIdx++;
+      }
+    }
+    return currIdx;
+  };
+
+  removeElement(nums: number[], val: number): number {
+    let curr = 0;
+    for(let i = 0; i < nums.length; i++) {
+      if(nums[i] != val){
+        nums[curr] = nums[i];
+        curr++;
+      }
+    }
+    return curr;
+  };
+
+  maxScoreIndices(nums: number[]): number[] {
+    let totalZeros = 0;
+    let map = new Map();
+    for (let i = 0; i < nums.length; i++) {
+      if(nums[i] == 0) {
+        totalZeros++;
+      }
+    }
+    let i = nums.length - 1;
+    let max = totalZeros;
+    map.set(totalZeros, [nums.length]);
+    let countOnes = 0;
+    while(i >= 0) {
+      if(nums[i] == 1) {
+        countOnes++;
+      } else {
+        totalZeros--;
+      }
+      let temp = totalZeros + countOnes;
+      if(temp >= max) {
+        if(!map.has(temp)) {
+          map.set(temp, []);
+        }
+        map.get(temp).push(i);
+        max = temp;
+      }
+      i--;
+    }
+
+    return map.get(max)!;
+  };
+
+  findMaxConsecutiveOnes(nums: number[]): number {
+    let left = 0, right = 0;
+    let max = 0;
+    let zeros = 1;
+    while(right < nums.length) {
+
+      if(nums[right] == 0) {
+        zeros--;
+      }
+
+      while(zeros == -1) {
+        if(nums[left] == 0){
+          zeros++;
+        }
+        left++;
+      }
+
+      max = Math.max(max, right - left + 1);
+      right++;
+    }
+    return max;
+  };
+
+  merge(nums1: number[], m: number, nums2: number[], n: number): number[] {
+    let i = 0, j = 0;
+    while(j < n && i < nums1.length) {
+      if(nums1[i] >= nums2[j]) {
+        let k = nums1.length - 1;
+        while(k > i) {
+          nums1[k] = nums1[k - 1];
+          k--;
+        }
+        nums1[i] = nums2[j];
+        j++;
+        i++;
+      } else {
+        i++;
+      }
+    }
+    while(j < n) {
+      nums1[m + j] = nums2[j];
+      j++;
+    }
+
+    return nums1;
+  };
+
+  duplicateZeros(arr: number[]): number[] {
+    let l = arr.length;
+    for(let i = 0; i < l; i++) {
+      if(arr[i] == 0){
+        let j = l - 1;
+        while(j > i) {
+          arr[j] = arr[j - 1];
+          j--;
+        }
+        i++;
+      }
+    }
+
+    return arr;
+  };
+
+  sortedSquares(nums: number[]): number[] {
+    let minIndex = -1;
+    for(let i = 0; i < nums.length; i++) {
+      if(nums[i] >= 0 && minIndex < 0) {
+        minIndex = i;
+      }
+      nums[i] = nums[i] * nums[i];
+    }
+    if(minIndex < 0) {
+      nums.reverse();
+      return nums;
+    }
+    const result = [];
+    let i = minIndex;
+    let j = minIndex - 1;
+    while(i < nums.length && j >= 0) {
+      if(nums[i] >= nums[j]) {
+        result.push(nums[j]);
+        j--;
+      } else {
+        result.push(nums[i]);
+        i++;
+      }
+    }
+    while(i < nums.length) {
+      result.push(nums[i]);
+      i++;
+    }
+    while(j >= 0) {
+      result.push(nums[j]);
+      j--;
+    }
+    return result;
+  };
+
+  minTaps(n: number, ranges: number[]): number {
+    const maxReach = new Array(n + 1).fill(0);
+
+    // Calculate the maximum reach for each tap
+    for (let i = 0; i < ranges.length; i++) {
+      // Calculate the leftmost position the tap can reach
+      let start = Math.max(0, i - ranges[i]);
+      // Calculate the rightmost position the tap can reach
+      let end = Math.min(n, i + ranges[i]);
+
+      // Update the maximum reach for the leftmost position
+      maxReach[start] = Math.max(maxReach[start], end);
+    }
+
+    // Number of taps used
+    let taps = 0;
+    // Current rightmost position reached
+    let currEnd = 0;
+    // Next rightmost position that can be reached
+    let nextEnd = 0;
+
+    // Iterate through the garden
+    for (let i = 0; i <= n; i++) {
+      // Current position cannot be reached
+      if (i > nextEnd) {
+        return -1;
+      }
+
+      // Increment taps when moving to a new tap
+      if (i > currEnd) {
+        taps++;
+        // Move to the rightmost position that can be reached
+        currEnd = nextEnd;
+      }
+      // Update the next rightmost position that can be reached
+      nextEnd = Math.max(nextEnd, maxReach[i]);
+    }
+    // Return the minimum number of taps used
+    return taps;
+  };
+
+  earliestFullBloom(plantTime: number[], growTime: number[]): number {
+    let sorted: number[][] = [];
+    for(let i = 0; i < plantTime.length; i++) {
+      sorted[i] = [plantTime[i], growTime[i]];
+    }
+    sorted.sort((a, b) => b[1] - a[1]);
+    let start = 0, end = sorted[0][0] + sorted[0][1] - 1;
+    for (let i = 1; i < sorted.length; i++) {
+      start = start + sorted[i-1][0];
+      end = Math.max(end, start + sorted[i][0] + sorted[i][1] - 1);
+    }
+
+    return end + 1;
+  };
+
+  videoStitching1(clips: number[][], time: number): number {
+    const n = clips.length
+    clips.sort((a,b) => a[0] - b[0])
+    const dp = Array.from({length: n}, () => Array(101))
+    const dfs = (e = 0, i = 0): number => {
+      if (e >= time) return 0
+      if (i >= n) return Infinity
+
+      if (dp[i][e] !== undefined) return dp[i][e]
+
+      let skip = dfs(e, i + 1)
+      let take = Infinity
+      if (clips[i][0] <= e) take = Math.min(dfs(Math.max(e, clips[i][1]), i + 1) + 1, take)
+      return dp[i][e] = Math.min(skip, take)
+    }
+    const res = dfs()
+    return res === Infinity ? -1 : res
+  };
+
+  videoStitching(clips: number[][], time: number): number {
+    const n = clips.length;
+    const memo: number[][] = Array.from({length: n}, () => Array(101).fill(-1));
+    clips.sort((a, b) => a[0] - b[0]);
+    //dp(i, t) = Math.min(dp(i+1, t), dp(i+1, Math.max(t, clips[i][1])) + 1);
+    const dp = (i: number, endTime: number): number => {
+      if(endTime >= time) {
+        return 0;
+      }
+      if(i >= n) {
+        return Infinity;
+      }
+
+      if(memo[i][endTime] != -1) {
+        return memo[i][endTime];
+      }
+
+      let skip = dp(i + 1, endTime);
+      let take = Infinity;
+      if(endTime >= clips[i][0]) { //overlapping
+        take = dp(i + 1, Math.max(endTime, clips[i][1])) + 1;
+      }
+      let res = Math.min(take, skip);
+      memo[i][endTime] = res;
+      return res;
+    };
+
+    let ans = dp(0, 0);
+    return ans == Infinity ? -1 : ans;
+  };
+
+  maximumMinutes(grid: number[][]): number {
+    let m = grid.length;
+    let n = grid[0].length;
+    const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const valid = (i: number, j: number): boolean => {
+      return i >= 0 && i < m && j >= 0 && j < n;
+    }
+
+    let fireInit: number[][] = []
+    const fireSetOriginal = new Set<string>();
+    for(let i = 0; i < m; i++) {
+      for(let j = 0; j < n; j++) {
+        if(grid[i][j] == 1) {
+          fireInit.push([i, j]);
+          fireSetOriginal.add(`${i}_${j}`)
+        }
+      }
+    }
+
+    const isValid = (time: number): boolean => {
+      let seen = [];
+      for(let k = 0; k < m; k++) {
+        seen.push(new Array(n).fill(false));
+      }
+
+      const fireSet = new Set(fireSetOriginal);
+
+      //loop t times for fire spread
+      let fireQueue: number[][] = fireInit;
+
+      for(let i = 0; i < time; i++) {
+        let nextFireQueue: number[][] = [];
+        for(const [i, j] of fireQueue) {
+          for(const [x, y] of directions) {
+            let nextX = i + x;
+            let nextY = j + y;
+            if(valid(nextX, nextY) && grid[nextX][nextY] == 0 && !fireSet.has(`${nextX}_${nextY}`)) {
+              fireSet.add(`${nextX}_${nextY}`);
+              nextFireQueue.push([nextX, nextY]);
+            }
+          }
+        }
+        fireQueue = nextFireQueue;
+      }
+
+      let queue: number[][] = [[0, 0]];
+
+      while(queue.length > 0) {
+        let nextQueue: number[][] = [];
+        for(const [i, j] of queue) {
+          if(i == m - 1 && j == n - 1) {
+            return true;
+          }
+
+          if(fireSet.has(`${i}_${j}`)) {
+            continue;
+          }
+
+          for(const [x, y] of directions) {
+            let nextX = i + x;
+            let nextY = j + y;
+            if(valid(nextX, nextY) && grid[nextX][nextY] == 0 && !seen[nextX][nextY] && !fireSet.has(`${nextX}_${nextY}`)) {
+              seen[i][j] = true;
+              nextQueue.push([nextX, nextY]);
+            }
+          }
+        }
+        queue = nextQueue;
+
+        if(queue.length > 0) {
+          let nextFireQueue: number[][] = [];
+          for(const [i, j] of fireQueue) {
+            for(const [x, y] of directions) {
+              let nextX = i + x;
+              let nextY = j + y;
+              if(valid(nextX, nextY) && grid[nextX][nextY] == 0 && !fireSet.has(`${nextX}_${nextY}`)) {
+                fireSet.add(`${nextX}_${nextY}`);
+                nextFireQueue.push([nextX, nextY]);
+              }
+            }
+          }
+          fireQueue = nextFireQueue;
+        }
+      }
+      return false;
+    };
+
+
+    let result = -1;
+    let l = 0, r = m * n;
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        l = m + 1
+      } else {
+        r = m - 1;
+      }
+    }
+
+    if(result == m*n && result == r) {
+      return 1000000000;
+    }
+
+    return result;
+  };
+
+  maximumMinutes1(grid: number[][]): number {
+    let m = grid.length;
+    let n = grid[0].length;
+    const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const valid = (i: number, j: number): boolean => {
+      return i >= 0 && i < m && j >= 0 && j < n;
+    }
+
+    const spreadFire = (t: number, seen: boolean[][]) => {
+       let queue: number[][] = [];
+       for(let i = 0; i< m; i++) {
+         for(let j = 0; j < n; j++) {
+           if(grid[i][j] == 1) {
+             seen[i][j] = true;
+             queue.push([i, j]);
+           }
+           if(grid[i][j] == 2) {
+             seen[i][j] = true;
+           }
+         }
+       }
+
+       for(let i = 0; i < t; i++) {
+         let nextQueue: number[][] = [];
+         for(const [i, j] of queue) {
+           for(const [x, y] of directions) {
+             let nextX = i + x;
+             let nextY = j + y;
+             if(valid(nextX, nextY) && grid[nextX][nextY] == 0 && !seen[nextX][nextY]) {
+               seen[nextX][nextY] = true;
+               nextQueue.push([nextX, nextY]);
+             }
+           }
+         }
+         queue = nextQueue;
+       }
+    }
+
+    const isValid = (time: number): boolean => {
+      let queue: number[][] = [[0, 0]];
+      let seen = [];
+      for(let k = 0; k < m; k++) {
+        seen.push(new Array(n).fill(false));
+      }
+      spreadFire(time, seen);
+
+      while(queue.length > 0) {
+        let nextQueue: number[][] = [];
+        for(const [i, j] of queue) {
+          if(seen[i][j]) {
+            continue;
+          } else {
+            seen[i][j] = true;
+          }
+
+          if(i == m - 1 && j == n - 1) {
+            return true;
+          }
+          for(const [x, y] of directions) {
+            let nextX = i + x;
+            let nextY = j + y;
+            if(valid(nextX, nextY) && seen[nextX][nextY] == false) {
+              nextQueue.push([nextX, nextY]);
+            }
+          }
+        }
+        spreadFire(1, seen);
+        queue = nextQueue;
+      }
+      return false;
+    };
+
+
+    let result = -1;
+    let l = 0, r = m * n;
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        l = m + 1
+      } else {
+        r = m - 1;
+      }
+    }
+
+    if(result == m*n && result == r) {
+      return 1000000000;
+    }
+
+    return result;
+  };
+
+  latestDayToCross(row: number, col: number, cells: number[][]): number {
+    const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const valid = (i: number, j: number): boolean => {
+      return i >= 0 && i < row && j >= 0 && j < col;
+    }
+    const isValid = (days: number): boolean => {
+      let queue: number[][] = [];
+      let seen = [];
+      for(let i = 0; i < row; i++) {
+        seen.push(new Array(col).fill(false));
+      }
+      for(let i = 0; i < days; i++) {
+        let [x, y] = cells[i];
+        seen[x - 1][y - 1] = true; //1 based index
+      }
+      //start from any cell on top row
+      for(let i = 0; i < col; i++) {
+        queue.push([0, i]);
+      }
+
+      while(queue.length > 0) {
+        let nextQueue: number[][] = [];
+        for(const [i, j] of queue) {
+          if(seen[i][j] == false) {
+            seen[i][j] = true;
+          } else {
+            continue;
+          }
+          if(i == row - 1) {
+            return true;
+          }
+          for(const [x, y] of directions) {
+            let nextX = i + x;
+            let nextY = j + y;
+            if(valid(nextX, nextY) && seen[nextX][nextY] == false) {
+              nextQueue.push([nextX, nextY]);
+            }
+          }
+        }
+        queue = nextQueue;
+      }
+      return false;
+    };
+
+
+    let result = -1;
+    let l = 0, r = cells.length;
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        l = m + 1
+      } else {
+        r = m - 1;
+      }
+    }
+
+    return result;
+  };
+
+  swimInWater(grid: number[][]): number {
+    let n = grid.length;
+    const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    const valid = (i: number, j: number): boolean => {
+      return i >= 0 && i < n && j >= 0 && j < n;
+    }
+    const isValid = (t: number): boolean => {
+      let queue = [[0,0]];
+      let seen = [];
+      for(let k = 0; k < n; k++) {
+        seen.push(new Array(n).fill(false));
+      }
+      while(queue.length > 0) {
+        let nextQueue: number[][] = [];
+        for(const [i, j] of queue) {
+          if(grid[i][j] > t) {
+            return false;
+          }
+
+          if(i == n - 1 && j == n - 1) {
+            return true;
+          }
+
+          for(const [x, y] of directions) {
+            let nextX = i + x;
+            let nextY = j + y;
+            if(valid(nextX, nextY) && grid[nextX][nextY] <= t && seen[nextX][nextY] == false) {
+              seen[nextX][nextY] = true;
+              nextQueue.push([nextX, nextY]);
+            }
+          }
+        }
+        queue = nextQueue;
+      }
+      return false;
+    };
+
+
+    let result = -1;
+    let l = 0, r = n * n;
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        r = m - 1;
+      } else {
+        l = m + 1
+      }
+    }
+
+    return result;
+  };
+
+  minDays(bloomDay: number[], m: number, k: number): number {
+    let n = bloomDay.length;
+
+    const isValid = (days: number): boolean => {
+      let count = 0;
+      let bouquets = m;
+      for (let i = 0; i < n; i++) {
+        if (bloomDay[i] <= days) {
+          count++;
+          if(count == k) {
+            bouquets--;
+            count = 0;
+          }
+        } else {
+          //reset
+          count = 0
+        }
+      }
+      return bouquets <= 0;
+    };
+
+
+    let result = -1;
+    let l = 0, r = Math.max(...bloomDay);
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        r = m - 1;
+      } else {
+        l = m + 1
+      }
+    }
+
+    return result;
+  };
+
+  maxRunTime(n: number, batteries: number[]): number {
+    let m = batteries.length;
+    let total = batteries.reduce((a, b) => a + b, 0);
+    const isValid = (time: number): boolean => {
+      let required = 0;
+      for(let i = 0; i < m; i++) {
+        required += Math.min(batteries[i], time);
+      }
+      return required >= n * time;
+    }
+
+    let result = 0;
+    let l = 0, r = Math.floor(total / n);
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        l = m + 1
+      } else {
+        r = m - 1;
+      }
+    }
+
+    return result;
+  };
+
+  maximumTastiness(price: number[], k: number): number {
+    price.sort((a, b) => a - b);
+    let min = price[0];
+    let max = price[price.length - 1];
+    let l = 0, r = max - min;
+
+    const isValid = (diff: number): boolean => {
+      let lastPrice = price[0];
+      let count = 1;// min price at index 0
+      for(let i = 1; i < price.length; i++){
+        if(price[i] - lastPrice >= diff){
+          count++;
+          lastPrice = price[i];
+        }
+        if(count >= k) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+
+    let result = 0;
+    while(l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      if(isValid(m)) {
+        result = m;
+        l = m + 1
+      } else {
+        r = m - 1;
+      }
+    }
+
+    return result;
+  };
+
+  maximumCandies(candies: number[], k: number): number {
+    let maxCandies = Math.max(...candies);
+
+    const calcKids = (c: number): number => {
+      let total = 0;
+      for(let i = 0; i < candies.length; i++) {
+        if(candies[i] >= c) {
+          total += Math.floor(candies[i] / c);
+        }
+      }
+      return total;
+    }
+
+    let l = 0, r = maxCandies;
+    let result: number = 0;
+    //binary search right most insertion position
+    while(l <= r) {
+      let m = Math.floor((l + r) / 2);
+      let kids = calcKids(m);
+      if(kids >= k) {
+        result = m;
+        l = m + 1;
+      } else {
+        r = m - 1;
+      }
+    }
+
+    return result;
+
+  };
+
+  minimumTime(time: number[], totalTrips: number): number {
+    let minTime = Math.min(...time);
+    let l = 1, r = totalTrips * minTime;
+
+    const calcTrips = (t: number): number => {
+      let sum = time.reduce((prev, curr) => {
+        return prev + Math.floor(t / curr);
+      }, 0);
+      return sum;
+    }
+
+    while (l <= r) {
+      let m = Math.floor((l + r)/ 2);
+      let mTrips = calcTrips(m);
+      if(mTrips >= totalTrips) {
+        console.log('m', m);
+        r = m - 1;
+      } else {
+        l = m + 1;
+      }
+    }
+    return l;
+  };
+
+  findMaxForm(strs: string[], m: number, n: number): number {
+    let size = strs.length;
+
+    const memo = new Map();
+
+    const count = (str: string): number[] => {
+      let size = str.length;
+      let ones = str.replaceAll('0', '');
+      return [size - ones.length, ones.length];
+    }
+    const dp = (i: number, zeros: number, ones:number): number => {
+      if(i == size) {
+        return 0;
+      }
+
+      if(memo.has(`${i}_${zeros}_${ones}`)) {
+        return memo.get(`${i}_${zeros}_${ones}`);
+      }
+
+      let [z, o] = count(strs[i]);
+      let ans1 = 0;
+      if (zeros + z <= m && ones + o <= n) {
+        ans1 = dp(i + 1, zeros + z, ones + o) + 1;
+      }
+      let ans2 = dp(i + 1, zeros, ones);
+
+      memo.set(`${i}_${zeros}_${ones}`, Math.max(ans1, ans2));
+
+      return memo.get(`${i}_${zeros}_${ones}`);
+    };
+
+    return dp(0, 0, 0);
+  };
+
+  maximalSquare(matrix: string[][]): number {
+    const m = matrix.length;
+    const n = matrix[0].length;
+    const memo: number[][] = [];
+    for (let i = 0; i < m; i++) {
+      memo.push(new Array(n).fill(-1));
+    }
+    let maxLen = 0;
+    const dp = (i: number, j: number): number => {
+      if(i < 0 || j < 0) {
+         return 0;
+      }
+
+      if(memo[i][j] != -1) {
+        return memo[i][j];
+      }
+
+      let ans = 0;
+      if(matrix[i][j] == '0') {
+        ans = 0;
+      } else {
+        ans = Math.min(dp(i - 1, j), dp(i - 1, j - 1), dp(i, j - 1)) + 1;
+      }
+
+      memo[i][j] = ans;
+      return ans;
+    };
+
+    for(let i=m-1;i>=0;i--){
+      for(let j=n-1;j>=0;j--){
+        maxLen = Math.max(maxLen, dp(i,j));
+      }
+    }
+
+    return maxLen * maxLen;
+  };
+
+  maximalSquare1(matrix: string[][]): number {
+    const m = matrix.length;
+    const n = matrix[0].length;
+
+    const calc = (i: number, j: number): number => {
+      let size = 1;
+      if(matrix[i][j] == '0'){
+        return 0;
+      }
+      let stop = false;
+      while(i + size < m && j + size < n && !stop) {
+        for(let k = i; k < i + size; k++) {
+          if(matrix[k][j + size] == '0'){
+            stop = true;
+            break;
+          }
+        }
+        for(let k = j; k < j + size; k++) {
+          if(matrix[i + size][k] == '0'){
+            stop = true;
+            break;
+          }
+        }
+        if(!stop) {
+          size++;
+        }
+      }
+      return size;
+    };
+
+    let max = 0;
+    for(let i = 0; i < m; i++) {
+      for(let j = 0; j < n; j++) {
+        max = Math.max(max, calc(i, j));
+      }
+    }
+
+    return max * max;
+  };
+
+  largestDivisibleSubset(nums: number[]): number[] {
+    let mem = new Array(nums.length).fill(-1);
+    //sort
+    nums.sort((a, b) => a - b);
+    let result: number[] = [];
+
+    const dp = (currIndex: number, curr: number[], prevNum: number) => {
+      if (curr.length > result.length) {
+        result = [...curr];
+      }
+
+      for (let i = currIndex; i < nums.length; i++) {
+        if ( curr.length > mem[i] && nums[i] % prevNum === 0) {
+          mem[i] = curr.length;
+          curr.push(nums[i]);
+          dp(i + 1, curr, nums[i]);
+          curr.pop();
+        }
+      }
+    }
+
+    dp(0, [], 1);
+    return result;
+  };
+
+  longestArithSeqLength(nums: number[]): number {
+    let max = Math.max(...nums);
+    let min = Math.min(...nums);
+    let maxDiff = max - min;
+    let minDiff = min - max;
+
+    const dp = (arr: number[], diff: number): number => {
+      let memo = new Map()
+
+      let max = 1;
+      for(const curr of arr) {
+        let prev = curr - diff;
+        if(memo.has(prev)) {
+          let count = memo.get(prev) + 1;
+          memo.set(curr, count);
+        } else {
+          memo.set(curr, 1);
+        }
+        max = Math.max(max,  memo.get(curr));
+      }
+
+      return max;
+    }
+
+    let result = Number.MIN_SAFE_INTEGER;
+    for(let i = minDiff; i <= maxDiff; i++){
+      result = Math.max(result, dp(nums, i));
+    }
+
+    return result;
+  };
+
+  numRollsToTarget(n: number, k: number, target: number): number {
+    const memo: number[][] = [];
+    for (let i = 0; i <= n; i++) {
+      memo.push(new Array(target+1).fill(-1));
+    }
+    const MOD = 1000000007;
+    const dp = (dices: number, sum: number): number => {
+      if(dices == n) {
+        return sum == target ? 1 : 0;
+      }
+
+      if(memo[dices][sum] != -1) {
+        return memo[dices][sum];
+      }
+
+      let ans = 0;
+      for(let j = 1; j <= Math.min(k, target - sum); j++) {
+        ans += dp(dices + 1, sum + j) % MOD;
+      }
+      ans = ans % MOD;
+      memo[dices][sum] = ans;
+      return ans;
+    };
+
+    return dp(0, 0);
+  };
+
+  rob3(root: TreeNode | null): number {
+    let memo = new Map();
+    const dp = (node: TreeNode | null): number => {
+      if (node == null) {
+        return 0;
+      }
+      if (memo.has(node)) {
+        return memo.get(node);
+      }
+
+      let nextLeft1 = null, nextLeft2 = null;
+      let nextRight1 = null, nextRight2 = null;
+      if (node.left != null) {
+        nextLeft1 = node.left.left;
+        nextLeft2 = node.left.right;
+      }
+      if (node.right != null) {
+        nextRight1 = node.right.left;
+        nextRight2 = node.right.right;
+      }
+      let a1 = dp(nextLeft1) + dp(nextLeft2) + dp(nextRight1) + dp(nextRight2) + node.val;
+      let a2 = dp(node.left) + dp(node.right);
+
+
+      let ans = Math.max(a1, a2);
+      memo.set(node, ans);
+      return ans;
+    };
+
+    return dp(root);
+  };
+
+  wordBreak(s: string, wordDict: string[]): boolean {
+    let memo = new Map()
+    const dp = (i: number): boolean => {
+      if (i < 0) {
+        return true;
+      }
+
+      if (memo.has(i)) {
+        return memo.get(i);
+      }
+      for (let word of wordDict) {
+        let len = word.length;
+        if (i + 1 - len < 0) {// word too long
+          continue;
+        }
+        if (s.substring(i + 1 - len, i + 1) === word && dp(i - len)) {
+          memo.set(i, true);
+          return true;
+        }
+      }
+
+      memo.set(i, false);
+      return false;
+    };
+
+    return dp(s.length - 1);
+  };
+
+  change(amount: number, coins: number[]): number {
+    let memo: number[][] = [];
+    for (let i = 0; i <= amount; i++) {
+      memo.push(new Array(coins.length).fill(-1));
+    }
+    const dp = (i: number, remaining: number): number => {
+      if (i >= coins.length || remaining < 0) {
+        return 0;
+      }
+      if (remaining == 0) {
+        return 1;
+      }
+
+      if (memo[remaining][i] != -1) {
+        return memo[remaining][i];
+      }
+
+      let ans = dp(i, remaining - coins[i]) + dp(i + 1, remaining);
+      memo[remaining][i] = ans;
+      return ans;
+    }
+
+    return dp(0, amount);
+  };
+
+  maxUncrossedLines(nums1: number[], nums2: number[]): number {
+    const len1 = nums1.length;
+    const len2 = nums2.length;
+    let memo: number[][] = [];
+    for (let i = 0; i < len1; i++) {
+      memo.push(new Array(len2).fill(-1));
+    }
+    const dp = (i: number, j: number): number => {
+      if (i < 0 || j < 0) {
+        return 0;
+      }
+
+      if (memo[i][j] != -1) {
+        return memo[i][j];
+      }
+
+      let ans = 0;
+      if (nums1[i] == nums2[j]) {
+        ans = dp(i - 1, j - 1) + 1;
+      } else {
+        ans = Math.max(dp(i - 1, j), dp(i, j - 1));
+      }
+
+      memo[i][j] = ans;
+      return ans;
+    };
+
+    return dp(len1 - 1, len2 - 1);
+  };
+
+  longestSubsequence(arr: number[], difference: number): number {
+    let memo: number[][] = [];
+    for (let i = 0; i <= arr.length; i++) {
+      memo.push(new Array(arr.length + 1).fill(-1));
+    }
+
+    const dp = (currIdx: number, prevIdx: number): number => {
+      if (currIdx >= arr.length) {
+        return 0;
+      }
+
+      if (memo[currIdx][prevIdx + 1] != -1) {
+        return memo[currIdx][prevIdx + 1];
+      }
+
+      let opt1 = 0;
+      if (prevIdx == -1 || arr[currIdx] - arr[prevIdx] == difference) {
+        opt1 = dp(currIdx + 1, currIdx) + 1;
+      }
+      let opt2 = dp(currIdx + 1, prevIdx);
+
+      memo[currIdx][prevIdx + 1] = Math.max(opt1, opt2);
+      return memo[currIdx][prevIdx + 1];
+    };
+
+
+    return dp(0, -1);
+  }
+
+  longestSubsequenceDp(arr: number[], difference: number): number {
+    let max = 1;
+    const map = new Map();
+
+    for (const num of arr) {
+      const prevNum = num - difference;
+      if (map.has(prevNum)) {
+        const length = map.get(prevNum)! + 1;
+        map.set(num, length);
+        max = Math.max(length, max);
+      } else {
+        map.set(num, 1);
+      }
+    }
+
+    return max;
+  };
+
+  rob2(nums: number[]): number {
+    if (nums.length == 1) {
+      return nums[0];
+    }
+    const dp = (houses: number[], i: number, memo: number[]): number => {
+      if (i >= houses.length) {
+        return 0;
+      }
+
+      if (memo[i] >= 0) {
+        return memo[i];
+      }
+
+      let opt1 = dp(houses, i + 2, memo) + houses[i];
+      let opt2 = dp(houses, i + 1, memo);
+      memo[i] = Math.max(opt1, opt2);
+      return memo[i];
+    };
+
+    let source1 = [...nums];
+    source1.pop();
+    let source2 = [...nums];
+    source2.shift();
+    let temp1 = dp(source1, 0, new Array(source1.length).fill(-1));
+    let temp2 = dp(source2, 0, new Array(source2.length).fill(-1));
+    return Math.max(temp1, temp2);
+  };
+
+  findTargetSumWays(nums: number[], target: number): number {
+    const n = nums.length;
+    const cache = new Map();
+    const dp = (i: number, remaining: number): number => {
+      if (i < 0 && remaining < 0) {
+        return 0;
+      }
+
+      if (i == -1) {
+        if (remaining == 0) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+
+      if (cache.has(`${i}_${remaining}`)) {
+        return cache.get(`${i}_${remaining}`);
+      }
+
+      const result = dp(i - 1, remaining - nums[i]) + dp(i - 1, remaining + nums[i]);
+      cache.set(`${i}_${remaining}`, result);
+      return result;
+    };
+
+    return dp(n - 1, target);
+  };
+
+  generate(numRows: number): number[][] {
+
+    const generateNext = (curr: number[]): number[] => {
+      let next: number[] = new Array(curr.length + 1).fill(1);
+      for (let i = 1; i < next.length - 1; i++) {
+        next[i] = curr[i - 1] + curr[i];
+      }
+      return next;
+    };
+
+    const dp = (rows: number): number[][] => {
+      if (rows == 1) {
+        return [[1]];
+      }
+
+      if (rows == 2) {
+        return [[1], [1, 1]];
+      }
+
+      let prev = dp(rows - 1);
+      let lastRow = prev[prev.length - 1];
+      let nextRow = generateNext(lastRow);
+      prev.push(nextRow);
+      return prev;
+    };
+
+    return dp(numRows);
+  };
+
+
+  minFallingPathSumDP(matrix: number[][]): number {
+    const n = matrix.length;
+    let memo: number[][] = [];
+    for (let i = 0; i < n; i++) {
+      memo.push(new Array(n).fill(-1));
+    }
+
+    const dp = (i: number, j: number): number => {
+      if (i < 0 || j < 0 || j >= n) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+
+      if (i == 0) {
+        return matrix[i][j];
+      }
+
+      if (memo[i][j] && memo[i][j] != -1) {
+        return memo[i][j];
+      }
+
+      let ans = dp(i - 1, j + 1) + matrix[i][j];
+      ans = Math.min(ans, dp(i - 1, j) + matrix[i][j]);
+      ans = Math.min(ans, dp(i - 1, j - 1) + matrix[i][j]);
+      memo[i][j] = ans;
+      return ans;
+    }
+
+    let ans = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < n; i++) {
+      ans = Math.min(ans, dp(n - 1, i))
+    }
+
+    return ans;
+  };
+
+  uniquePathsWithObstacles2(obstacleGrid: number[][]): number {
+    if (obstacleGrid[0][0] == 1) {
+      return 0;
+    }
+    const m = obstacleGrid.length;
+    const n = obstacleGrid[0].length;
+    let dp: number[][] = [];
+    for (let i = 0; i <= m; i++) {
+      dp.push(new Array(n + 1).fill(0));
+    }
+
+    dp[0][0] = 1;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        if (obstacleGrid[i][j] == 1) {
+          dp[i][j] = 0;
+        } else {
+          if (i > 0) {
+            dp[i][j] += dp[i - 1][j];
+          }
+          if (j > 0) {
+            dp[i][j] += dp[i][j - 1];
+          }
+
+        }
+      }
+    }
+
+    return dp[m - 1][n - 1];
+  };
+
+
+  uniquePathsTabular(m: number, n: number): number {
+    let dp: number[][] = [];
+    for (let i = 0; i <= m; i++) {
+      dp.push(new Array(n + 1).fill(0));
+    }
+    dp[m - 1][n - 1] = 1;
+    for (let i = m - 1; i >= 0; i--) {
+      for (let j = n - 1; j >= 0; j--) {
+        if (i < m - 1) {
+          dp[i][j] += dp[i + 1][j];
+        }
+        if (j < n - 1) {
+          dp[i][j] += dp[i][j + 1];
+        }
+      }
+    }
+
+    return dp[0][0];
+  };
+
+  uniquePaths1(m: number, n: number): number {
+    let memo: number[][] = [];
+    for (let i = 0; i <= m; i++) {
+      memo.push(new Array(n).fill(-1));
+    }
+
+    const dp = (r: number, c: number): number => {
+      if (r == m - 1 && c == n - 1) {
+        return 1;
+      }
+
+      if (memo[r][c] && memo[r][c] != -1) {
+        return memo[r][c];
+      }
+
+      let ans = 0;
+      if (r < m) {
+        ans += dp(r + 1, c);
+      }
+      if (c < n) {
+        ans += dp(r, c + 1);
+      }
+      memo[r][c] = ans;
+      return ans;
+    };
+
+    return dp(0, 0);
+  };
+
+  maxProfitDP(prices: number[]): number {
+    let dp: number[][] = [];
+    for (let i = 0; i <= prices.length + 1; i++) {
+      dp.push([0, 0]);
+    }
+
+
+    for (let i = prices.length - 1; i >= 0; i--) {
+      for (let j = 0; j < 2; j++) {
+        if (j == 1) {
+          dp[i][j] = Math.max(dp[i + 1][j], dp[i + 2][0] + prices[i]);
+        } else {
+          dp[i][j] = Math.max(dp[i + 1][j], dp[i + 1][1] - prices[i]);
+        }
+      }
+    }
+
+    return dp[0][0];
+  };
+
+  maxProfitT(prices: number[]): number {
+    let cache: number[][] = [];
+    for (let i = 0; i < prices.length; i++) {
+      cache.push([-1, -1]);
+    }
+
+    const dp = (i: number, holding: boolean): number => {
+      if (i >= prices.length) {
+        return 0;
+      }
+
+      let holdIdx = holding ? 1 : 0;
+      if (cache[i][holdIdx] != -1) {
+        return cache[i][holdIdx];
+      }
+
+      let ans = dp(i + 1, holding);
+      if (holding) {
+        ans = Math.max(ans, dp(i + 2, false) + prices[i]);
+      } else {
+        ans = Math.max(ans, dp(i + 1, true) - prices[i]);
+      }
+      cache[i][holdIdx] = ans;
+      return ans;
+    };
+
+    return dp(0, false);
+  };
+
+  maxValueOfCoins(piles: number[][], k: number): number {
+    let n = piles.length;
+    let cache = new Map();
+    const dp = (i: number, remaining: number): number => {
+      if (remaining <= 0 || i == piles.length) {
+        return 0;
+      }
+      let memo = [];
+      for (let i = 0; i < piles.length; i++) {
+        memo.push(new Array(k + 1).fill(-1));
+      }
+
+      let pile = piles[i];
+      let size = Math.min(pile.length, remaining);
+      let ans = dp(i + 1, remaining); //skip the current pile
+      let curr = 0;
+      for (let j = 0; j < size; j++) {
+        curr += pile[j];
+        ans = Math.max(ans, curr + dp(i + 1, remaining - j - 1));
+      }
+
+      memo[i][remaining] = ans;
+      return ans;
+    }
+    let memo = [];
+    for (let i = 0; i < piles.length; i++) {
+      memo.push(new Array(k + 1).fill(-1));
+    }
+
+    return dp(0, k);
+  };
+
+  maxProfitBottomUp(k: number, prices: number[]): number {
+    const matrix: number[][][] = [];
+    const days = prices.length;
+    for (let i = 0; i <= days; i++) {
+      matrix.push([]);
+      for (let j = 0; j < 2; j++) {
+        matrix[i].push(new Array(k + 1).fill(0));
+      }
+    }
+
+
+    for (let i = days - 1; i >= 0; i--) {
+      for (let sell = 1; sell <= k; sell++) {
+        for (let holding = 0; holding < 2; holding++) {
+          if (holding === 1) {
+            matrix[i][holding][sell] = Math.max(matrix[i + 1][0][sell - 1] + prices[i], matrix[i + 1][holding][sell]);
+          } else {
+            matrix[i][holding][sell] = Math.max(matrix[i + 1][1][sell] - prices[i], matrix[i + 1][holding][sell]);
+          }
+        }
+      }
+    }
+    return matrix[0][0][k];
+  };
+
+  maxProfit(k: number, prices: number[]): number {
+    const matrix: number[][][] = [];
+    for (let i = 0; i <= prices.length; i++) {
+      matrix.push([]);
+      for (let j = 0; j < 2; j++) {
+        matrix[i].push(new Array(k + 1).fill(-1));
+      }
+    }
+    const dp = (i: number, holding: number, sell: number): number => {
+      if (sell == 0 || i >= prices.length) {
+        return 0;
+      }
+      if (matrix[i][holding][sell] >= 0) {
+        return matrix[i][holding][sell];
+      }
+
+      let ans = 0;
+      if (holding == 0) {
+        ans = Math.max(dp(i + 1, 1, sell) - prices[i], dp(i + 1, holding, sell));
+      } else {
+        ans = Math.max(prices[i] + dp(i + 1, 0, sell - 1), dp(i + 1, holding, sell));
+      }
+      matrix[i][holding][sell] = ans;
+      return ans;
+    };
+
+
+    return dp(0, 0, k);
+  };
+
+  longestCommonSubsequence(text1: string, text2: string): number {
+    let m = text1.length, n = text2.length;
+    const grid = [];
+    for (let i = 0; i <= m; i++) {
+      grid.push(new Array(n + 1).fill(0));
+    }
+    for (let i = m - 1; i >= 0; i--) {
+      for (let j = n - 1; j >= 0; j--) {
+        if (text1[i] == text2[j]) {
+          grid[i][j] = grid[i + 1][j + 1] + 1;
+        } else {
+          grid[i][j] = Math.max(grid[i][j + 1], grid[i + 1][j]);
+        }
+      }
+    }
+
+    return grid[0][0];
+  };
+
+  longestCommonSubsequenceDP(text1: string, text2: string): number {
+    let m = text1.length, n = text2.length;
+    const grid: number[][] = [];
+    for (let i = 0; i <= m; i++) {
+      grid.push(new Array(n + 1).fill(-1));
+    }
+    const dp = (i: number, j: number): number => {
+      if (i == text1.length || j == text2.length) {
+        return 0;
+      }
+
+      if (grid[i][j] >= 0) {
+        return grid[i][j];
+      }
+      let temp = 0;
+      if (text1[i] == text2[j]) {
+        temp = dp(i + 1, j + 1) + 1;
+      } else {
+        temp = Math.max(dp(i, j + 1), dp(i + 1, j));
+      }
+      grid[i][j] = temp;
+      return temp;
+    }
+
+    return dp(0, 0);
+  };
+
+  coinChange(coins: number[], amount: number): number {
+    let max = amount + 1;
+    const arr = new Array(amount + 1).fill(max);
+    arr[0] = 0;
+    for (let i = 1; i <= amount; i++) {
+      for (let j = 0; j < coins.length; j++) {
+        if (coins[j] <= i) {
+          arr[i] = Math.min(arr[i], arr[i - coins[j]] + 1);
+        }
+      }
+    }
+
+    return arr[amount] > amount ? -1 : arr[amount];
+  };
+
+  coinChangeDP(coins: number[], amount: number): number {
+    const cache = new Map();
+
+    const dp = (remaining: number): number => {
+      if (remaining < 0) {
+        return -1;
+      }
+      if (remaining == 0) {
+        return 0;
+      }
+
+      if (cache.has(remaining)) {
+        return cache.get(remaining);
+      }
+
+      let min = Number.MAX_SAFE_INTEGER;
+      for (let i = 0; i < coins.length; i++) {
+        let ans = dp(remaining - coins[i]);
+        if (ans >= 0 && ans < Number.MAX_SAFE_INTEGER) {
+          min = Math.min(min, ans + 1);
+        }
+      }
+      cache.set(remaining, min);
+      return min;
+    };
+
+    let result = dp(amount);
+    return result == Number.MAX_SAFE_INTEGER ? -1 : result;
+  };
+
+  minCostClimbingStairs2(costs: number[]): number {
+    let n = costs.length;
+    const dp = new Array(n + 1).fill(0);
+
+    dp[0] = 0;
+    dp[1] = 0;
+    for (let i = 2; i <= n; i++) {
+      dp[i] = Math.min(dp[i - 1] + costs[i - 1], dp[i - 2] + costs[i - 2]);
+    }
+
+    return dp[n];
+  };
+
+  climbStairs(n: number): number {
+    const dp = (num: number): number => {
+      if (num > n) {
+        return 0;
+      }
+      if (num == n) {
+        return 1;
+      }
+
+      return dp(num + 1) + dp(num + 2);
+    }
+
+    return dp(0);
+  };
+
+  climbStairsTopDown(n: number): number {
+    if (n == 1) {
+      return 1;
+    }
+    const dp = new Array(n + 1).fill(0);
+
+    dp[1] = 1;
+    dp[2] = 2;
+    for (let i = 3; i <= n; i++) {
+      dp[i] = dp[i - 1] + dp[i - 2];
+    }
+
+    return dp[n];
+  };
+
+  mostPoints(questions: number[][]): number {
+    const n = questions.length;
+    const dp = new Array(n + 1).fill(0);
+
+    for (let i = n - 1; i >= 0; i--) {
+      let [p, b] = questions[i];
+      let ans1 = p + ((i + 1 + b) >= n ? 0 : dp[i + 1 + b]);
+      let ans2 = (i + 1) >= n ? 0 : dp[i + 1];
+      dp[i] = Math.max(ans1, ans2);
+    }
+
+    return dp[0];
+  };
+
+  mostPointsRecursion(questions: number[][]): number {
+    const n = questions.length;
+    const cache = new Array(n).fill(-1);
+    const dp = (i: number): number => {
+      if (i >= n) {
+        return 0;
+      }
+      if (cache[i] >= 0) {
+        return cache[i];
+      }
+      let [p, b] = questions[i];
+      let a1 = p + dp(i + b + 1);
+      let a2 = dp(i + 1);
+      cache[i] = Math.max(a1, a2);
+      return cache[i];
+    };
+
+    return dp(0);
+  };
+
+  lengthOfLIS_DP(nums: number[]): number {
+    const cache = new Array<number>(nums.length).fill(-1);
+
+    const dp = (j: number): number => {
+      if (cache[j] > 0) {
+        return cache[j];
+      }
+
+      let ans = 1;//default base case is one
+      for (let i = 0; i < j; i++) {
+        if (nums[j] > nums[i]) {
+          ans = Math.max(ans, dp(i) + 1);
+        }
+      }
+      cache[j] = ans;
+      return ans;
+    }
+
+    let result = 0;
+    for (let i = 0; i < nums.length; i++) {
+      result = Math.max(result, dp(i));
+    }
+
+    return result;
+  };
+
+  lengthOfLisBS(nums: number[]): number {
+    let arr = [nums[0]];
+
+    const findIndex = (array: number[], t: number): number => {
+      let l = 0, r = array.length - 1;
+      while (l <= r) {
+        let m = Math.floor((l + r) / 2);
+        if (array[m] >= t) {
+          r = m - 1;
+        } else {
+          l = m + 1;
+        }
+      }
+      return l;
+    };
+
+
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] > arr[arr.length - 1]) {
+        arr.push(nums[i]);
+      } else {
+        let index = findIndex(arr, nums[i]);
+        arr[index] = nums[i];
+      }
+    }
+
+
+    return arr.length;
+  };
+
+  lengthOfLIS(nums: number[]): number {
+    let arr = [nums[0]];
+
+    const findIndex = (array: number[], t: number): number => {
+      let i = 0;
+      for (i = 0; i < array.length; i++) {
+        if (array[i] >= t) {
+          break;
+        }
+      }
+      return i;
+    };
+
+
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] > arr[arr.length - 1]) {
+        arr.push(nums[i]);
+      } else {
+        let index = findIndex(arr, nums[i]);
+        arr[index] = nums[i];
+      }
+    }
+
+
+    return arr.length;
+  };
+
+  minCostClimbingStairs(costs: number[]): number {
+    const n = costs.length;
+    const cache: number[] = new Array(n).fill(-1);
+
+    const dp = (i: number): number => {
+      if (i == 0 || i == 1) {
+        return 0;
+      }
+
+      if (cache[i] >= 0) {
+        return cache[i];
+      }
+
+      const val = Math.min(dp(i - 1) + costs[i - 1], dp(i - 2) + costs[i - 2]);
+      cache[i] = val;
+      return val;
+    }
+
+    return dp(n);
+  };
+
+  minCostClimbingStairs1(costs: number[]): number {
+    const n = costs.length;
+    const minCosts: number[] = new Array(n + 1).fill(0);
+
+    minCosts[0] = 0;
+    minCosts[1] = 0;
+    for (let i = 2; i <= n; i++) {
+      minCosts[i] = Math.min(costs[i - 1] + minCosts[i - 1], costs[i - 2] + minCosts[i - 2]);
+    }
+    return minCosts[n];
+  };
+
+  robTopDown(nums: number[]): number {
+    const n = nums.length;
+    if (n == 1) {
+      return nums[0];
+    }
+
+    let lastTwo: number = nums[0];
+    let lastOne = Math.max(nums[0], nums[1]);
+    for (let i = 2; i < n; i++) {
+      let temp = lastOne;
+      lastOne = Math.max(lastOne, lastTwo + nums[i]);
+      lastTwo = temp;
+    }
+
+    return lastOne;
+  };
+
+  rob1(nums: number[]): number {
+    const cache = new Map();
+    const robFrom = (i: number): number => {
+      if (i >= nums.length) {
+        return 0;
+      }
+      if (cache.has(i)) {
+        return cache.get(i);
+      }
+
+      let ans = Math.max(robFrom(i + 1), (nums[i] + robFrom(i + 2)))
+      cache.set(i, ans);
+      return ans;
+    }
+
+    return robFrom(0);
+  };
+
+  rob(nums: number[]): number {
+    const cache = new Map();
+    const n = nums.length;
+    const robFrom = (i: number): number => {
+      if (i < 0) {
+        return 0;
+      }
+
+      if (i == 0) {
+        return nums[0];
+      }
+
+      if (i == 1) {
+        return Math.max(nums[0], nums[1]);
+      }
+
+      if (cache.has(i)) {
+        return cache.get(i);
+      }
+
+      let ans = Math.max(robFrom(i - 1), (nums[i] + robFrom(i - 2)))
+      cache.set(i, ans);
+      return ans;
+    }
+
+    return robFrom(n - 1);
+  };
+
+  uniquePathsIII(grid: number[][]): number {
+    let result = 0;
+    const m = grid.length;
+    const n = grid[0].length;
+    const directions = [[0, 1], [0, -1], [-1, 0], [1, 0]];
+    const isValid = (x: number, y: number): boolean => {
+      return x >= 0 && y >= 0 && x < m && y < n;
+    };
+    const getKey = (x: number, y: number) => `${x}-${y}`;
+    let start: number[] | null = null;
+    let count = 0;
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        if (grid[i][j] == 1) {
+          start = [i, j];
+        } else if (grid[i][j] == 0) {
+          count++;
+        }
+      }
+    }
+
+    const dfs = (queue: number[], emptyCount: number, seen: Set<string>) => {
+      let [r, c] = queue;
+      if (grid[r][c] == 2 && emptyCount == 0) {
+        result++;
+        return;
+      }
+
+      for (const [x1, y1] of directions) {
+        let x = r + x1;
+        let y = c + y1;
+        if (isValid(x, y) && grid[x][y] == 2 && emptyCount == 0) {
+          result++;
+          return;
+        }
+
+        if (isValid(x, y) && !seen.has(getKey(x, y)) && grid[x][y] == 0) {
+          let key = getKey(x, y);
+          seen.add(key);
+          dfs([x, y], emptyCount - 1, seen);
+          seen.delete(key);
+        }
+      }
+    };
+    dfs(start!, count, new Set());
+    return result;
+  };
+
+  partition(s: string): string[][] {
+    const res: string[][] = [];
+    dfs(s, []);
+    return res;
+
+    function dfs(str: string, path: string[]) {
+      if (!str.length) {
+        res.push([...path]);
+        return;
+      }
+      for (let i = 0; i < str.length; i++) {
+        const cur = str.substring(0, i + 1);
+        if (isPalindrome(cur)) {
+          dfs(str.substring(i + 1), [...path, cur]);
+        }
+      }
+    }
+
+    function isPalindrome(str: string) {
+      let lo = 0,
+        hi = str.length - 1;
+      while (lo < hi) {
+        if (str[lo++] != str[hi--]) return false;
+      }
+      return true;
+    }
+  }
+
+  partition1(s: string): string[][] {
+    const validate = (str: string): boolean => {
+      let r = str.length - 1;
+      let l = 0;
+      while (l <= r) {
+        if (str[l] !== str[r]) {
+          return false;
+        }
+        l++;
+        r--;
+      }
+      return true;
+    };
+
+    let result: string[][] = [];
+    const backtrack = (curr: string[], str: string) => {
+      if (!str.length) {
+        result.push([...curr]);
+        return;
+      }
+
+      for (let i = 0; i < str.length; i++) {
+        let temp = str.substring(0, i + 1);// end index is exclusive
+        if (validate(temp)) {
+          curr.push(temp);
+          backtrack(curr, str.substring(i + 1));
+          curr.pop();
+        }
+      }
+    };
+
+    backtrack([], s);
+
+    return result;
+  };
+
+  partition2(s: string): string[][] {
+    const n = s.length;
+    const getKey = (arr: string[]) => arr.join('-');
+    const seen = new Set();
+
+    const validate = (str: string): boolean => {
+      let r = str.length - 1;
+      let l = 0;
+      while (l <= r) {
+        if (str[l] !== str[r]) {
+          return false;
+        }
+        l++;
+        r--;
+      }
+      return true;
+    };
+
+    let result: string[][] = [];
+
+    const backtrack = (curr: string[], start: number) => {
+
+      const key = getKey(curr);
+
+      if (curr.join('').length == n && !seen.has(key)) {
+        seen.add(key);
+        result.push([...curr]);
+        return;
+      }
+
+      if (start > n) {
+        return;
+      }
+
+      for (let size = 1; size <= n; size++) {
+        let str = s.slice(start, start + size);// end index is exclusive
+        if (validate(str)) {
+          curr.push(str);
+          backtrack(curr, start + size);
+          curr.pop();
+        }
+      }
+    };
+
+    backtrack([], 0);
+
+    return result;
+  };
+
+  restoreIpAddresses(s: string): string[] {
+    let result: string[] = [];
+
+    const backtrack = (curr: string[], start: number) => {
+
+      if (curr.length == 4) {
+        let totalLength = curr.reduce((prev, curr) => {
+          return prev + curr.length;
+        }, 0);
+        if (totalLength == s.length) {
+          let newIp = curr.join('.');
+          if (!result.includes(newIp)) {
+            result.push(newIp);
+          }
+        }
+        return;
+      }
+
+      for (let size = 1; size <= 3; size++) {
+        let l = s.slice(start, start + size);
+        if (l.length > 1 && l.startsWith('0')) {
+          return;
+        }
+        let val = parseInt(l);
+        if (val <= 255) {
+          curr.push(l);
+          backtrack(curr, start + size);
+          curr.pop();
+        }
+      }
+    };
+
+    backtrack([], 0);
+
+    return result;
+  };
+
+  findSubsequences(nums: number[]): number[][] {
+    const results: number[][] = [];
+    const seen = new Set();
+    const getKey = (arr: number[]) => arr.join('-');
+
+    const backtrack = (curr: number[], j: number) => {
+      // if we have checked all elements
+      const key = getKey(curr);
+      if (j == nums.length) {
+        if (curr.length >= 2 && !seen.has(key)) {
+          results.push([...curr]);
+          seen.add(key);
+        }
+        return;
+      }
+      // if the sequence remains increasing after appending nums[index]
+      if (curr.length == 0 || curr[curr.length - 1] <= nums[j]) {
+        curr.push(nums[j]);
+        backtrack(curr, j + 1);
+        curr.pop();
+      }
+      // call recursively without appending an element
+      backtrack(curr, j + 1);
+
+
+    };
+    backtrack([], 0);
+    return results;
+  };
+
+  getHappyString(n: number, k: number): string {
+    const arr = ['a', 'b', 'c'];
+    let result: string[] = [];
+
+    const backtrack = (curr: string[]) => {
+      if (curr.length == n) {
+        result.push(curr.join(''));
+        return;
+      }
+
+      for (let i = 0; i < arr.length; i++) {
+        if (curr.length == 0 || curr[curr.length - 1] != arr[i]) {
+          curr.push(arr[i]);
+          backtrack(curr);
+          curr.pop();
+        }
+      }
+    };
+
+    backtrack([]);
+    result.sort((a, b) => a.localeCompare(b));
+    return result.length >= k ? result[k - 1] : '';
+  };
+
+  distributeCookies1(cookies: number[], k: number): number {
+    let sums: number[] = [];
+    let n = cookies.length;
+    cookies.sort((a, b) => a - b);
+    let initArray: number[][] = [];
+    for (let i = 0; i < k; i++) {
+      initArray.push([]);
+    }
+
+    const backtrack = (dist: number[][], cookieIndex: number, emptyCount: number) => {
+      if (emptyCount > n - cookieIndex || cookieIndex > n) {
+        return;
+      }
+
+      if (cookieIndex == n && emptyCount == 0) {
+        let count = 0;
+        let sumMax = 0;
+        for (const arr of dist) {
+          count += arr.length;
+          let sum = arr.reduce((prev, curr) => prev + curr, 0);
+          sumMax = Math.max(sumMax, sum);
+        }
+        if (count == n) {
+          sums.push(sumMax);
+        }
+        return;
+      }
+
+      for (let j = 0; j < k; j++) {
+        let d = dist[j];
+        if (d.length == 0) {
+          emptyCount--;
+        }
+        for (let i = cookieIndex; i < n; i++) {
+          if (cookieIndex >= i || cookies[i - 1] != cookies[i]) {
+            d.push(cookies[i]);
+            backtrack(dist, i + 1, emptyCount);
+            d.pop();
+          }
+        }
+        if (d.length == 0) {
+          emptyCount++;
+        }
+      }
+    }
+    backtrack(initArray, 0, k);
+    return Math.min(...sums);
+  };
+
+  distributeCookies(cookies: number[], k: number): number {
+    let sums: number[] = [];
+    let n = cookies.length;
+    cookies.sort((a, b) => a - b);
+    let initArray: number[][] = [];
+    for (let i = 0; i < k; i++) {
+      initArray.push([]);
+    }
+
+    const backtrack = (dist: number[][], cookieIndex: number, emptyCount: number) => {
+      if (emptyCount > n - cookieIndex || cookieIndex > n) {
+        return;
+      }
+
+      if (cookieIndex == n && emptyCount == 0) {
+        let count = 0;
+        let sumMax = 0;
+        for (const arr of dist) {
+          count += arr.length;
+          let sum = arr.reduce((prev, curr) => prev + curr, 0);
+          sumMax = Math.max(sumMax, sum);
+        }
+        if (count == n) {
+          sums.push(sumMax);
+        }
+        return;
+      }
+
+      for (let j = 0; j < k; j++) {
+        let d = dist[j];
+        if (d.length == 0) {
+          emptyCount--;
+        }
+        d.push(cookies[cookieIndex]);
+        backtrack(dist, cookieIndex + 1, emptyCount);
+        d.pop();
+        if (d.length == 0) {
+          emptyCount++;
+        }
+      }
+    }
+    backtrack(initArray, 0, k);
+    return Math.min(...sums);
+  };
 
   combinationSum2(candidates: number[], target: number): number[][] {
     const results: number[][] = [];
@@ -105,7 +2978,7 @@ export class LeetCodeComponent implements OnInit {
     const getKey = (arr: number[]): string => {
       return arr.join('_');
     }
-    const backtrack = (curr: number[], seen: Set<number>) => {
+    const backtrack = (curr: number[], seen: Set<number>, idx: number) => {
       let key = getKey(curr);
       if (curr.length == nums.length && !set.has(key)) {
         set.add(key);
@@ -118,14 +2991,14 @@ export class LeetCodeComponent implements OnInit {
         if (!seen.has(i)) {
           seen.add(i);
           curr.push(num);
-          backtrack(curr, seen);
+          backtrack(curr, seen, idx + 1);
           curr.pop();
           seen.delete(i);
         }
       }
     };
 
-    backtrack([], new Set());
+    backtrack([], new Set(), 0);
     return results;
   };
 
@@ -523,7 +3396,7 @@ export class LeetCodeComponent implements OnInit {
   permute(nums: number[]): number[][] {
     let result: number[][] = [];
     const n = nums.length;
-    const backtrack = (curr: number[]) => {
+    const backtrack = (curr: number[], idx: number) => {
       if (curr.length == n) {
         result.push([...curr]);
         return;
@@ -533,14 +3406,13 @@ export class LeetCodeComponent implements OnInit {
         let num = nums[i];
         if (!curr.includes(num)) {
           curr.push(num);
-          backtrack(curr);
+          backtrack(curr, idx + 1);
           curr.pop();
         }
       }
     }
 
-    backtrack([]);
-    console.log(result);
+    backtrack([], 0);
     return result;
   };
 
@@ -1224,21 +4096,6 @@ export class LeetCodeComponent implements OnInit {
     // target is not in arr, but left is at the insertion point
     return left;
   }
-
-  videoStitching(clips: number[][], time: number): number {
-    let desc = [...clips];
-    desc.sort((a, b) => {
-      if (a[1] < b[1]) {
-        return 1;
-      } else if (a[1] > b[1]) {
-        return -1;
-      } else {
-        return a[0] - b[0];
-      }
-    });
-
-    return 0;
-  };
 
   makeIntegerBeautiful(n: number, target: number): number {
     const getSum = (num: number): number => {
@@ -4657,24 +7514,6 @@ export class LeetCodeComponent implements OnInit {
     return max;
   };
 
-  swapPairs(head: ListNode | null): ListNode | null {
-    const dummy = new ListNode(-1);
-    dummy.next = head;
-    let prevNode = dummy;
-    while (head && head.next) {
-      const firstNode = head;
-      const secondNode = head.next;
-      //this will update dummy next node only once
-      prevNode.next = secondNode;
-      firstNode.next = secondNode.next;
-      secondNode.next = firstNode;
-      //reference to dummy node next is broken after this line
-      prevNode = firstNode;
-      head = firstNode.next;
-    }
-    return dummy.next;
-  };
-
   swapPairsRecur(head: ListNode | null): ListNode | null {
     // If the list has no node or has only one node left.
     if (head == null || head.next == null) {
@@ -4684,7 +7523,7 @@ export class LeetCodeComponent implements OnInit {
     let firstNode: ListNode | null = head;
     let secondNode: ListNode | null = head.next;
     // Swapping
-    firstNode.next = this.swapPairs(secondNode.next);
+    firstNode.next = this.swapPairsRecur(secondNode.next);
     secondNode.next = firstNode;
     // Now the head is the second node
     return secondNode;
@@ -5389,7 +8228,7 @@ export class LeetCodeComponent implements OnInit {
   }
 
 
-  sortedSquares(nums: number[]): number[] {
+  sortedSquares1(nums: number[]): number[] {
     let minIndex = -1;
     let min = Number.MAX_SAFE_INTEGER;
     const ans = [];

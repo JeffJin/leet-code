@@ -24,14 +24,14 @@ export const convertTree = (items: any[]): TreeNode | null => {
     let nextItems = [];
     while(stack.length > 0){
       let node = stack.shift();
-      let left = items.shift();
-      node.left = left != null ? new TreeNode(left) : null;
+      let leftVal = items.shift();
+      node.left = leftVal != null ? new TreeNode(leftVal) : null;
       if(node.left != null) {
         nextItems.push(node.left);
       }
-      let right = items.shift();
-      node.right = right != null ? new TreeNode(right) : null;
-      if(node.right) {
+      let rightVal = items.shift();
+      node.right = rightVal != null ? new TreeNode(rightVal) : null;
+      if(node.right != null) {
         nextItems.push(node.right);
       }
     }

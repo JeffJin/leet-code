@@ -1,109 +1,63 @@
 export class MaxHeap {
-  private readonly heap: number[];
-  private comparer: (a: number, b: number) => boolean;
+  private arr: number[] = [];
 
-  constructor(comparer: (a: number, b: number) => boolean = (a: number, b: number) => a > b) {
-    this.heap = [];
-    this.comparer = comparer;
+  constructor(nums: number[] = []) {
+    this.arr = this.heapify(nums);
   }
 
-  // Helper Methods
-  private getLeftChildIndex(parentIndex: number) {
-    return 2 * parentIndex + 1;
-  }
-  private getRightChildIndex(parentIndex: number) {
-    return 2 * parentIndex + 2;
-  }
-  private getParentIndex(childIndex: number) {
-    return Math.floor((childIndex - 1) / 2);
-  }
-  private hasLeftChild(index: number) {
-    return this.getLeftChildIndex(index) < this.heap.length;
-  }
-  private hasRightChild(index: number) {
-    return this.getRightChildIndex(index) < this.heap.length;
-  }
-  private hasParent(index: number) {
-    return this.getParentIndex(index) >= 0;
-  }
-  private leftChild(index: number) {
-    return this.heap[this.getLeftChildIndex(index)];
-  }
-  private rightChild(index: number) {
-    return this.heap[this.getRightChildIndex(index)];
-  }
-  private parent(index: number) {
-    return this.heap[this.getParentIndex(index)];
+  private heapifyDown(nums: number[], index: number) {
+    const leftIndex = index * 2 + 1;
+    const rightIndex = index * 2 + 2;
+    let maxIndex = index;
+    if(leftIndex < nums.length && nums[leftIndex] > nums[maxIndex]) {
+      maxIndex = leftIndex;
+    }
+    if(rightIndex < nums.length && nums[rightIndex] > nums[maxIndex]) {
+      maxIndex = rightIndex;
+    }
+    if(maxIndex != index) {
+      [nums[maxIndex], nums[index]] = [nums[index], nums[maxIndex]];
+      this.heapifyDown(nums, maxIndex);
+    }
   }
 
-  // Functions to create Min Heap
+  heapifyUp(nums: number[], index: number)  {
+    const parentIndex = Math.floor((index - 1) / 2);
+    if(parentIndex >= 0 && nums[parentIndex] < nums[index]) {
+      [nums[parentIndex], nums[index]] = [nums[index], nums[parentIndex]];
+      this.heapifyUp(nums, parentIndex);
+    }
+  }
 
-  private swap(indexOne: number, indexTwo: number) {
-    [this.heap[indexOne], this.heap[indexTwo]] = [this.heap[indexTwo], this.heap[indexOne]];
+  heapify(nums: number[]): number[] {
+    for(let i = Math.floor(nums.length/2) - 1; i >= 0; i--) {
+      this.heapifyDown(nums, i);
+    }
+    return nums;
+  }
+
+  add(num: number): void {
+    this.arr.push(num);
+
+    this.heapifyUp(this.arr, this.arr.length - 1);
+  }
+
+  remove(): number | undefined {
+    [this.arr[this.arr.length - 1], this.arr[0]] =  [this.arr[0], this.arr[this.arr.length - 1]];
+    let result = this.arr.pop();
+    this.heapifyDown(this.arr, 0);
+    return result;
+  }
+
+  peek(): number | undefined {
+    return this.arr[0];
   }
 
   size(): number {
-    return this.heap.length;
+    return this.arr.length;
   }
 
-  peek() {
-    if (this.heap.length === 0) {
-      return null;
-    }
-    return this.heap[0];
-  }
-
-  // Removing an element will remove the
-  // top element with highest priority then
-  // heapifyDown will be called
-  remove() {
-    if (this.heap.length === 0) {
-      return null;
-    }
-    const item = this.heap[0];
-    this.heap[0] = this.heap[this.heap.length - 1];
-    this.heap.pop();
-    this.heapifyDown();
-    return item;
-  }
-
-  add(item: number) {
-    this.heap.push(item);
-    this.heapifyUp();
-  }
-
-  private heapifyUp() {
-    let index = this.heap.length - 1;
-    // while (this.hasParent(index) && this.heap[index] > this.parent(index)) {
-    while (this.hasParent(index) && this.comparer(this.heap[index], this.parent(index))) {
-      this.swap(this.getParentIndex(index), index);
-      index = this.getParentIndex(index);
-    }
-  }
-
-  private heapifyDown() {
-    let index = 0;
-    while (this.hasLeftChild(index)) {
-      let largerChildIndex = this.getLeftChildIndex(index);
-      // if (this.hasRightChild(index) && this.rightChild(index) > this.leftChild(index)) {
-      if (this.hasRightChild(index) && this.comparer(this.rightChild(index), this.leftChild(index))) {
-        largerChildIndex = this.getRightChildIndex(index);
-      }
-      // if (this.heap[index] > this.heap[largerChildIndex]) {
-      if (this.comparer(this.heap[index], this.heap[largerChildIndex])) {
-        break;
-      } else {
-        this.swap(index, largerChildIndex);
-      }
-      index = largerChildIndex;
-    }
-  }
-
-  printHeap() {
-    var heap =` ${this.heap[0]} `
-    for(var i = 1; i<this.heap.length;i++) {
-      heap += ` ${this.heap[i]} `;
-    }
-    console.log(heap);
+  print() {
+    console.log(`[${this.arr.join(', ')}]`);
   }
 }

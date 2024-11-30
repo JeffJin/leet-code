@@ -1420,9 +1420,7 @@ export class SampleComponent implements OnInit {
       map.set(arr[i],  map.get(arr[i]) + 1);
     }
 
-    let heap = new MaxHeap((a: number, b: number): boolean => {
-      return map.get(a) > map.get(b);
-    });
+    let heap = new MaxHeap();
 
     for(const k of map.keys()) {
       heap.add(k);
@@ -1465,9 +1463,7 @@ export class SampleComponent implements OnInit {
 
   maximumUnits(boxTypes: number[][], truckSize: number): number {
 
-    let heap = new MaxHeap((a: number, b: number): boolean => {
-      return boxTypes[a][1] > boxTypes[b][1];
-    });
+    let heap = new MaxHeap();
 
     for(let i = 0; i < boxTypes.length; i++) {
       heap.add(i);
