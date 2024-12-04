@@ -11,6 +11,8 @@ import {buildLinkedList, ListNode} from "../linked-list";
 import {ArrayReader} from "../array-reader";
 import {data3, data5} from "../data";
 import {MinHeap} from "../min-heap";
+import {min} from "rxjs";
+import {QuickUnion} from "../quick-union";
 
 @Component({
   selector: 'app-leet-code',
@@ -34,12 +36,232 @@ export class LeetCodeComponent implements OnInit {
     // console.log('findDisappearedNumbers', this.findDisappearedNumbers([2,2,3,1]));
     // let head1 = buildLinkedList([1,2,4]);
     // let head2 = buildLinkedList([5]);
-    console.log('furthestBuilding', this.furthestBuilding([4,12,2,7,3,18,20,3,19], 10, 2));
-    console.log('furthestBuilding', this.furthestBuilding([14,3,19,3], 17, 0));
+    // console.log('findCircleNumBfs', this.findCircleNumBfs([[1,1,0],[1,1,0],[0,0,1]]));
+    // console.log('validTree', this.validTreeDfs(5, [[0,1],[0,2],[0,3],[1,4]]));
+    console.log('validTree', this.validTreeUnion(5, [[0,1],[0,2],[0,3],[1,4]]));
+    // console.log('validTree', this.validTreeDfs(5, [[0,1],[1,2],[2,3],[1,3],[1,4]]));
+    console.log('validTree', this.validTreeUnion(5, [[0,1],[1,2],[2,3],[1,3],[1,4]]));
+    console.log('validTree', this.validTreeUnion(5, [[0, 1], [1, 2], [3, 4]]));
+    console.log('validTree', this.validTreeUnion(1, []));
+    // console.log('validTree', this.validTreeDfs(4, [[2,3],[1,2],[1,3]]));
+  }
+
+  validTreeUnion(n: number, edges: number[][]): boolean {
+    if (edges.length != n - 1) { //exactly n - 1 edges for valid tree
+      return false;
+    }
+    const qn = new QuickUnion(n);
+    for(let i = 0; i < edges.length; i++) {
+      let [x, y] = edges[i];
+      qn.union(x, y);
+    }
+    const set = new Set();
+    for(let i = 0; i < n; i++) {
+      let r = qn.find(i);
+      set.add(r);
+    }
+    return set.size == 1;
+  }
+
+  validTreeDfs(n: number, edges: number[][]): boolean {
+    if (edges.length != n - 1) { //exactly n - 1 edges for valid tree
+      return false;
+    }
+
+    const graph = new Map();
+    for(let i = 0; i < edges.length; i++) {
+      let [x, y] = edges[i]
+      if(!graph.has(x)) {
+        graph.set(x, []);
+      }
+      if(!graph.has(y)) {
+        graph.set(y, []);
+      }
+      graph.get(x).push(y);
+      graph.get(y).push(x);
+    }
+
+    //detect circle and roots
+    const dfsRecur = (node: number, set: Set<number>) => {
+      if(set.has(node)) {// revisit a node that is already visited
+        return;
+      }
+      set.add(node);
+      for (const neighbor of graph.get(node)) {
+        dfsRecur(neighbor, set);
+      }
+    }
+
+    const dfsItr = (k: number): boolean => {
+      const seen = new Set();
+      seen.add(k);
+      let queue = [k];
+      while(queue.length > 0) {
+        let node = queue.pop();
+        for(const neighbor of graph.get(node) || []) {
+          if(!seen.has(neighbor)) {
+            seen.add(neighbor);
+            queue.push(neighbor);
+          }
+        }
+      }
+      return seen.size == n;
+    }
+
+    let seen = new Set<number>();
+    dfsRecur(0, seen)
+    return seen.size == n;
+  };
+
+  validTreeBfs(n: number, edges: number[][]): boolean {
+    if (edges.length != n - 1) { //exactly n - 1 edges for valid tree
+      return false;
+    }
+    const graph = new Map();
+    for(let i = 0; i < edges.length; i++) {
+      let [x, y] = edges[i]
+      if(!graph.has(x)) {
+        graph.set(x, []);
+      }
+      if(!graph.has(y)) {
+        graph.set(y, []);
+      }
+      graph.get(x).push(y);
+      graph.get(y).push(x);
+    }
+
+    //detect circle and roots
+    const bfs = (k: number): boolean => {
+      const seen = new Set();
+      seen.add(k);
+      let queue = [k];
+      while(queue.length > 0) {
+        let nextQueue = [];
+        for(let i = 0; i < queue.length; i++) {
+          let node = queue[i];
+          for(const neighbor of graph.get(node)||[]){
+            if(!seen.has(neighbor)) {
+              nextQueue.push(neighbor);
+              seen.add(neighbor);
+            }
+          }
+        }
+        queue = nextQueue;
+      }
+
+      return seen.size == n;
+    };
+
+    return bfs(0);
+  };
+
+  findCircleNumBfs(isConnected: number[][]): number {
+    const graph = new Map();
+    const n = isConnected.length;
+    const set = new Set();
+
+    const bfs = (node: number) => {
+      let queue = [node];
+      set.add(node);
+      while(queue.length > 0) {
+        let nextQueue = [];
+        for(const nextNode of graph.get(node)) {
+          if(!set.has(nextNode)) {
+            nextQueue.push(nextNode);
+            set.add(nextNode)
+          }
+        }
+        queue = nextQueue;
+      }
+    }
+
+    for(let i = 0; i < n; i++) {
+      if(!graph.has(i)) {
+        graph.set(i, []);
+      }
+      for(let j = 0; j < isConnected[i].length; j++) {
+        if(!graph.has(j)) {
+          graph.set(j, []);
+        }
+        if (isConnected[i][j] === 1) {
+          graph.get(i).push(j);
+          graph.get(j).push(i);
+        }
+      }
+    }
+
+    let ans = 0;
+    for(let i = 0; i < n; i++) {
+      if(!set.has(i)) {
+        ans += 1;
+        bfs(i);
+      }
+    }
+
+    return ans;
+  }
+
+  findCircleNumQuickUnion(isConnected: number[][]): number {
+    const n = isConnected.length;
+    const union = new QuickUnion(n);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if(isConnected[i][j] == 1){
+          union.union(i, j);
+        }
+      }
+    }
+    let set = new Set();
+    for (let j = 0; j < n; j++) {
+      let root = union.find(j);
+      if(!set.has(root)){
+        set.add(root);
+      }
+    }
+
+    return set.size;
   }
 
   furthestBuilding(heights: number[], bricks: number, ladders: number): number {
+    let sorted: number[][] = [];
+    for (let i = 0; i < heights.length - 1; i++) {
+      let curr = heights[i];
+      let next = heights[i + 1];
+      let diff = next - curr;
+      if (diff > 0) {
+        sorted.push([i + 1, diff]);
+      }
+      sorted.sort((a, b) => a[1] - b[1]);
+    }
+    const reachable = (end: number, br: number, ld: number): boolean => {
 
+      for (let i = 0; i < sorted.length; i++) {
+        if(sorted[i][0] > end) {
+          continue;
+        }
+        br -= sorted[i][1];
+        if (br < 0) {
+          ld--;
+        }
+        if(br < 0 && ld < 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    let right = heights.length - 1, left = 0;
+    let ans = 0;
+    while(left <= right) {
+      let mid = Math.floor((left + right) / 2);
+      if(reachable(mid, bricks, ladders)) {
+        ans = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+    return ans;
   };
 
   kClosest(points: number[][], k: number): number[][] {
